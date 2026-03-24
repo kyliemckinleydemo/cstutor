@@ -529,7 +529,7 @@ function HistoryView({ sessions }) {
   );
 }
 
-function FormulasView({ formulas }) {
+function FormulasView({ formulas, setFormulas }) {
   const formulaItems = formulas.filter(f => f.type === "formula");
   const definitionItems = formulas.filter(f => f.type !== "formula");
 
@@ -538,6 +538,8 @@ function FormulasView({ formulas }) {
       No entries yet — complete a lesson to start building your sheet.
     </div>
   );
+
+  const deleteEntry = (f) => setFormulas(prev => prev.filter(x => !(x.topic === f.topic && x.label === f.label)));
 
   const Section = ({ items, heading, color }) => {
     if (!items.length) return null;
@@ -553,9 +555,10 @@ function FormulasView({ formulas }) {
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: "3px" }}>
               {byTopic[topic].map((f, i) => (
-                <div key={i} style={{ display: "flex", gap: "8px", alignItems: "flex-start", padding: "4px 8px", background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: "5px" }}>
+                <div key={i} className="no-print-x" style={{ display: "flex", gap: "8px", alignItems: "flex-start", padding: "4px 8px", background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: "5px" }}>
                   <code style={{ fontFamily: "var(--font-mono,monospace)", fontSize: "11px", background: "rgba(0,105,62,0.09)", color: "#004d2e", padding: "1px 6px", borderRadius: "3px", fontWeight: 600, whiteSpace: "pre", flexShrink: 0 }}>{f.label}</code>
-                  <span style={{ fontSize: "11px", color: "var(--color-text-secondary)", lineHeight: "1.5" }}>{f.context}</span>
+                  <span style={{ fontSize: "11px", color: "var(--color-text-secondary)", lineHeight: "1.5", flex: 1 }}>{f.context}</span>
+                  <button onClick={() => deleteEntry(f)} className="no-print" style={{ flexShrink: 0, background: "none", border: "none", cursor: "pointer", color: "var(--color-text-tertiary)", fontSize: "13px", lineHeight: 1, padding: "1px 3px", borderRadius: "3px" }}>×</button>
                 </div>
               ))}
             </div>
@@ -854,7 +857,7 @@ Return JSON for a single re-instruction section:
 
       {showNav && <NavBar view={view} setView={setView} sessionCount={sessions.length} formulaCount={formulas.length} dueCount={dueCount} />}
       {view === "history" && <HistoryView sessions={sessions} />}
-      {view === "formulas" && <FormulasView formulas={formulas} />}
+      {view === "formulas" && <FormulasView formulas={formulas} setFormulas={setFormulas} />}
       {view === "review" && <ReviewView flagged={flagged} setFlagged={setFlagged} onDone={() => setView("session")} />}
 
       {view === "session" && <PhaseBar phase={phase} />}
