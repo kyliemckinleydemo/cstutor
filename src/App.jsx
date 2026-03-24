@@ -541,7 +541,7 @@ function VideoCard({ video }) {
   );
 }
 
-function TopNav({ view, setView, onHome, sessionCount, formulaCount, dueCount }) {
+function TopNav({ view, setView, onHome, sessionCount, formulaCount, dueCount, user, onSignOut }) {
   const tabs = [
     { id: "session", label: "New Topic" },
     { id: "history", label: `History${sessionCount ? ` (${sessionCount})` : ""}` },
@@ -565,6 +565,12 @@ function TopNav({ view, setView, onHome, sessionCount, formulaCount, dueCount })
               {t.label}
             </button>
           ))}
+          {user && (
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginLeft: "8px", paddingLeft: "8px", borderLeft: "0.5px solid var(--color-border-tertiary)" }}>
+              <span style={{ fontSize: "11px", color: "var(--color-text-tertiary)", maxWidth: "140px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{user.email}</span>
+              <button onClick={onSignOut} style={{ fontSize: "11px", padding: "3px 9px", borderRadius: "20px", border: "0.5px solid var(--color-border-tertiary)", background: "transparent", color: "var(--color-text-tertiary)", cursor: "pointer" }}>Sign out</button>
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -805,6 +811,50 @@ const Btn = ({ label, onClick, primary = true, disabled = false }) => (
   </button>
 );
 
+function SignInView({ onSignedIn }) {
+  const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [sent, setSent] = useState(false);
+  const [error, setError] = useState("");
+
+  const send = async () => {
+    if (!email.trim() || loading) return;
+    setLoading(true); setError("");
+    try {
+      const res = await fetch("/api/auth/send", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email }) });
+      if (!res.ok) throw new Error("Could not send — please try again.");
+      setSent(true);
+    } catch (e) { setError(e.message); }
+    setLoading(false);
+  };
+
+  if (sent) return (
+    <div style={{ textAlign: "center", padding: "4rem 1rem" }}>
+      <div style={{ width: "52px", height: "52px", borderRadius: "50%", background: "#e6f3ed", border: "2px solid #00693e", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 1.25rem", fontSize: "22px" }}>✉</div>
+      <div style={{ fontSize: "17px", fontWeight: 700, marginBottom: "8px" }}>Check your email</div>
+      <div style={{ fontSize: "14px", color: "var(--color-text-secondary)" }}>Sent a sign-in link to <strong>{email}</strong>.<br />The link expires in 15 minutes.</div>
+      <button onClick={() => setSent(false)} style={{ marginTop: "1.5rem", fontSize: "13px", background: "none", border: "none", color: "var(--color-text-tertiary)", cursor: "pointer", textDecoration: "underline" }}>Use a different email</button>
+    </div>
+  );
+
+  return (
+    <div style={{ maxWidth: "400px", margin: "4rem auto" }}>
+      <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: "var(--border-radius-lg)", padding: "2rem" }}>
+        <div style={{ fontSize: "17px", fontWeight: 700, marginBottom: "6px" }}>Sign in</div>
+        <div style={{ fontSize: "13px", color: "var(--color-text-secondary)", marginBottom: "1.5rem" }}>We'll email you a sign-in link. No password needed.</div>
+        {error && <div style={{ fontSize: "13px", color: "#a32d2d", marginBottom: "1rem" }}>{error}</div>}
+        <input type="email" value={email} onChange={e => setEmail(e.target.value)} onKeyDown={e => e.key === "Enter" && send()}
+          placeholder="your@email.com" autoFocus
+          style={{ width: "100%", boxSizing: "border-box", padding: "10px 12px", fontSize: "15px", borderRadius: "var(--border-radius-md)", border: "0.5px solid var(--color-border-secondary)", background: "var(--color-background-secondary)", color: "var(--color-text-primary)", outline: "none", marginBottom: "12px" }} />
+        <button onClick={send} disabled={!email.trim() || loading}
+          style={{ width: "100%", padding: "10px", background: email.trim() ? "#00693e" : "var(--color-background-secondary)", color: email.trim() ? "white" : "var(--color-text-tertiary)", border: "none", borderRadius: "var(--border-radius-md)", fontSize: "14px", fontWeight: 600, cursor: email.trim() ? "pointer" : "default" }}>
+          {loading ? "Sending…" : "Send sign-in link →"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
   const [view, setView] = useState("session");
   const [phase, setPhase] = useState("topic");
@@ -829,6 +879,75 @@ export default function App() {
     return (s?.phase && s.phase !== "topic") ? s : null;
   });
   const sessionSavedRef = useRef(false);
+
+  // Auth
+  const [user, setUser] = useState(null);
+  const [authLoading, setAuthLoading] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return !!localStorage.getItem("cstutor_session") || new URLSearchParams(window.location.search).has("token");
+  });
+
+  const loadCloudData = async (u) => {
+    try {
+      const res = await fetch("/api/sync/get", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ sessionToken: u.sessionToken, courseId: COURSE.id }) });
+      if (res.status === 401) { signOut(); return; }
+      const { data } = await res.json();
+      if (data) {
+        setSessions(data.sessions || []);
+        setFormulas(data.formulas || []);
+        setFlagged(data.flagged || []);
+      }
+      // If no cloud data yet, current localStorage data will be pushed on next sync
+    } catch {}
+  };
+
+  const signOut = () => {
+    localStorage.removeItem("cstutor_session");
+    setUser(null);
+  };
+
+  // Verify magic link token from URL or restore stored session
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const magicToken = params.get("token");
+    if (magicToken) {
+      window.history.replaceState({}, "", window.location.pathname);
+      (async () => {
+        try {
+          const res = await fetch("/api/auth/verify", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token: magicToken }) });
+          if (!res.ok) { const { error } = await res.json(); throw new Error(error); }
+          const { email, sessionToken } = await res.json();
+          const u = { email, sessionToken };
+          localStorage.setItem("cstutor_session", JSON.stringify(u));
+          setUser(u);
+          await loadCloudData(u);
+        } catch (e) { alert(e.message || "Sign-in link failed — please try again."); }
+        setAuthLoading(false);
+      })();
+      return;
+    }
+    const stored = localStorage.getItem("cstutor_session");
+    if (stored) {
+      try {
+        const u = JSON.parse(stored);
+        if (u?.sessionToken) {
+          setUser(u);
+          loadCloudData(u).finally(() => setAuthLoading(false));
+          return;
+        }
+      } catch {}
+    }
+    setAuthLoading(false);
+  }, []);
+
+  // Debounced cloud sync whenever persistent data changes
+  useEffect(() => {
+    if (!user) return;
+    const t = setTimeout(() => {
+      fetch("/api/sync/save", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ sessionToken: user.sessionToken, courseId: COURSE.id, data: { sessions, formulas, flagged } }) }).catch(() => {});
+    }, 2000);
+    return () => clearTimeout(t);
+  }, [sessions, formulas, flagged, user]);
 
   // Persist cross-session data
   useEffect(() => stor.set(`cstutor_${COURSE.id}_sessions`, sessions), [sessions]);
@@ -995,9 +1114,30 @@ Return JSON for a single re-instruction section:
   const chatProps = { topic, sections, questions, answers, results, followUpText, phase, history: chatHistory, setHistory: setChatHistory };
   const dueCount = flagged.filter(f => f.dueDate <= today()).length;
 
+  if (authLoading) return (
+    <div style={{ maxWidth: "1100px", margin: "0 auto", padding: "0 2rem 2rem", fontFamily: "var(--font-sans,system-ui)", color: "var(--color-text-primary)" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "7px", height: "52px", borderBottom: "0.5px solid var(--color-border-tertiary)", marginBottom: "1.5rem", marginLeft: "-2rem", marginRight: "-2rem", paddingLeft: "2rem" }}>
+        <div style={{ width: "7px", height: "7px", borderRadius: "50%", background: "#00693e" }} />
+        <span style={{ fontSize: "14px", fontWeight: 700 }}>{COURSE_TITLE}</span>
+      </div>
+      <div style={{ textAlign: "center", padding: "4rem 1rem" }}><LoadDots /></div>
+    </div>
+  );
+
+  if (!user) return (
+    <div style={{ maxWidth: "1100px", margin: "0 auto", padding: "0 2rem 2rem", fontFamily: "var(--font-sans,system-ui)", color: "var(--color-text-primary)" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "7px", height: "52px", borderBottom: "0.5px solid var(--color-border-tertiary)", marginBottom: "1.5rem", marginLeft: "-2rem", marginRight: "-2rem", paddingLeft: "2rem" }}>
+        <div style={{ width: "7px", height: "7px", borderRadius: "50%", background: "#00693e" }} />
+        <span style={{ fontSize: "14px", fontWeight: 700 }}>{COURSE_TITLE}</span>
+        <span style={{ fontSize: "11px", color: "var(--color-text-tertiary)", fontWeight: 500 }}>{COURSE_LABEL}</span>
+      </div>
+      <SignInView />
+    </div>
+  );
+
   return (
     <div style={{ maxWidth: "1100px", margin: "0 auto", padding: "0 2rem 2rem", fontFamily: "var(--font-sans,system-ui)", color: "var(--color-text-primary)" }}>
-      <TopNav view={view} setView={setView} onHome={reset} sessionCount={sessions.length} formulaCount={formulas.length} dueCount={dueCount} />
+      <TopNav view={view} setView={setView} onHome={reset} sessionCount={sessions.length} formulaCount={formulas.length} dueCount={dueCount} user={user} onSignOut={signOut} />
       {view === "history" && <HistoryView sessions={sessions} />}
       {view === "formulas" && <FormulasView formulas={formulas} setFormulas={setFormulas} />}
       {view === "review" && <ReviewView flagged={flagged} setFlagged={setFlagged} onDone={() => setView("session")} />}
