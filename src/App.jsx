@@ -584,7 +584,7 @@ Return JSON for a single re-instruction section:
           <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#00693e" }} />
           <span style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.12em", color: "#00693e", textTransform: "uppercase" }}>Dartmouth COSC 77</span>
         </div>
-        <h1 style={{ fontSize: "26px", fontWeight: 700, margin: 0, letterSpacing: "-0.02em" }}>Study Tutor</h1>
+        <h1 onClick={reset} style={{ fontSize: "26px", fontWeight: 700, margin: 0, letterSpacing: "-0.02em", cursor: phase !== "topic" ? "pointer" : "default" }}>Study Tutor</h1>
         <p style={{ fontSize: "13px", color: "var(--color-text-secondary)", margin: "4px 0 0" }}>Deep lessons · Drilldown on any formula · Adaptive quizzing</p>
       </div>
 
