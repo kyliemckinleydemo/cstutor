@@ -530,8 +530,8 @@ function HistoryView({ sessions }) {
 }
 
 function FormulasView({ formulas }) {
-  const formulaItems = formulas.filter(f => f.type !== "definition");
-  const definitionItems = formulas.filter(f => f.type === "definition");
+  const formulaItems = formulas.filter(f => f.type === "formula");
+  const definitionItems = formulas.filter(f => f.type !== "formula");
 
   if (!formulas.length) return (
     <div style={{ textAlign: "center", padding: "3rem 1rem", color: "var(--color-text-tertiary)", fontSize: "14px" }}>
@@ -730,13 +730,13 @@ Return JSON with exactly this structure — sections array only, no other keys:
       "title": "${title}",
       "prose": "Write 3 full connected paragraphs (no bullets, no headers inside). ${note} Each paragraph minimum 60 words.",
       "keyItems": [
-        { "label": "the exact formula, equation, recurrence, or Big-O expression — or a key term if no formula applies", "context": "one sentence explaining what it means or where it comes from", "type": "formula" }
+        { "label": "exact formula, expression, or key term", "context": "one sentence explaining what it means or where it comes from", "type": "formula or definition" }
       ]
     }`).join(",\n    ")}
   ]
 }
 
-IMPORTANT: prose must be real paragraph text, not placeholder instructions. keyItems: always include 2-3 per section. Prioritize actual formulas, equations, recurrences, and complexity expressions (e.g. T(n) = 2T(n/2) + O(n), O(n log n), f(x) = wx + b). Use type "formula" for these. Use type "definition" only for pure conceptual terms with no associated formula. Never return an empty array.`;
+IMPORTANT: prose must be real paragraph text, not placeholder instructions. keyItems: always include 2-3 per section. For each item set type to exactly "formula" or "definition". Use "formula" for: Big-O expressions (O(n log n), O(n²)), recurrence relations (T(n) = 2T(n/2) + O(n)), mathematical equations (h(k) = k mod m, load factor λ = n/m), complexity bounds, and any symbolic expression. Use "definition" for conceptual terms with no symbolic form. Never return an empty array.`;
 
     const [r1, r2, ytVideos] = await Promise.all([
       askJSON([{ role: "user", content: sectionPrompt([
