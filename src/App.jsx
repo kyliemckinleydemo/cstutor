@@ -673,12 +673,27 @@ function HistoryView({ sessions }) {
 
 function FormulasView({ formulas, setFormulas }) {
   const [filter, setFilter] = useState("all");
+  const [adding, setAdding] = useState(false);
+  const [newType, setNewType] = useState("formula");
+  const [newTopic, setNewTopic] = useState("");
+  const [newLabel, setNewLabel] = useState("");
+  const [newContext, setNewContext] = useState("");
+
+  const existingTopics = [...new Set(formulas.map(f => f.topic))].sort();
+
+  const submitNew = () => {
+    if (!newLabel.trim() || !newContext.trim() || !newTopic.trim()) return;
+    setFormulas(prev => [...prev, { topic: newTopic.trim(), label: newLabel.trim(), context: newContext.trim(), type: newType }]);
+    setNewLabel(""); setNewContext(""); setAdding(false);
+  };
+
   const formulaItems = formulas.filter(f => f.type === "formula");
   const definitionItems = formulas.filter(f => f.type !== "formula");
 
-  if (!formulas.length) return (
-    <div style={{ textAlign: "center", padding: "3rem 1rem", color: "var(--color-text-tertiary)", fontSize: "14px" }}>
-      No entries yet — complete a lesson to start building your sheet.
+  if (!formulas.length && !adding) return (
+    <div style={{ textAlign: "center", padding: "3rem 1rem" }}>
+      <div style={{ color: "var(--text-muted)", fontSize: "14px", marginBottom: "1.25rem" }}>No entries yet — complete a lesson or add one manually.</div>
+      <button onClick={() => setAdding(true)} style={{ padding: "9px 20px", background: "var(--pine)", color: "white", border: "none", borderRadius: "10px", fontSize: "14px", fontWeight: 600, cursor: "pointer", boxShadow: "0 2px 8px rgba(26,58,42,0.2)" }}>+ Add entry</button>
     </div>
   );
 
@@ -721,17 +736,88 @@ function FormulasView({ formulas, setFormulas }) {
     );
   };
 
+  const inputStyle = { width: "100%", boxSizing: "border-box", padding: "9px 12px", fontSize: "13px", borderRadius: "8px", border: "1.5px solid var(--border)", background: "var(--cream)", color: "var(--text-dark)", outline: "none", fontFamily: "var(--font-sans)" };
+
   return (
     <div>
       <style>{`@media print { .no-print { display: none !important; } body { background: white; } } ${printHideRule}`}</style>
-      <div className="no-print" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem" }}>
-        <select value={filter} onChange={e => setFilter(e.target.value)} style={{ padding: "4px 10px", fontSize: "12px", fontWeight: 600, borderRadius: "var(--border-radius-md)", border: "0.5px solid var(--color-border-secondary)", background: "var(--color-background-secondary)", color: "var(--color-text-secondary)", cursor: "pointer" }}>
+
+      {/* Toolbar */}
+      <div className="no-print" style={{ display: "flex", gap: "8px", alignItems: "center", marginBottom: "1rem", flexWrap: "wrap" }}>
+        <select value={filter} onChange={e => setFilter(e.target.value)} style={{ padding: "6px 12px", fontSize: "12px", fontWeight: 600, borderRadius: "8px", border: "1.5px solid var(--border)", background: "var(--cream)", color: "var(--text-mid)", cursor: "pointer" }}>
           <option value="all">All</option>
           <option value="formulas">Formulas</option>
           <option value="definitions">Definitions</option>
         </select>
-        <button onClick={() => window.print()} style={{ padding: "5px 14px", fontSize: "12px", fontWeight: 600, borderRadius: "var(--border-radius-md)", border: "0.5px solid var(--color-border-secondary)", background: "var(--color-background-secondary)", color: "var(--color-text-secondary)", cursor: "pointer" }}>Print / Save PDF</button>
+        <div style={{ flex: 1 }} />
+        <button onClick={() => { setAdding(a => !a); }} style={{ padding: "6px 16px", fontSize: "12px", fontWeight: 600, borderRadius: "8px", border: "1.5px solid var(--border)", background: adding ? "var(--pine)" : "var(--cream)", color: adding ? "white" : "var(--text-mid)", cursor: "pointer" }}>
+          {adding ? "Cancel" : "+ Add entry"}
+        </button>
+        <button onClick={() => window.print()} style={{ padding: "6px 16px", fontSize: "12px", fontWeight: 600, borderRadius: "8px", border: "1.5px solid var(--border)", background: "var(--cream)", color: "var(--text-mid)", cursor: "pointer" }}>Print / PDF</button>
       </div>
+
+      {/* Add form */}
+      {adding && (
+        <div style={{ background: "#fff", border: "1.5px solid var(--border)", borderRadius: "14px", padding: "1.5rem", marginBottom: "1.25rem", boxShadow: "0 4px 16px rgba(26,58,42,0.07)" }}>
+          <div style={{ fontSize: "13px", fontWeight: 700, color: "var(--pine)", marginBottom: "1rem", letterSpacing: "0.04em", textTransform: "uppercase", fontSize: "11px" }}>New Entry</div>
+
+          {/* Type toggle */}
+          <div style={{ display: "flex", gap: "6px", marginBottom: "1rem" }}>
+            {["formula", "definition"].map(t => (
+              <button key={t} onClick={() => setNewType(t)}
+                style={{ padding: "6px 18px", fontSize: "12px", fontWeight: 600, borderRadius: "100px", border: "1.5px solid", borderColor: newType === t ? "var(--pine)" : "var(--border)", background: newType === t ? "var(--pine)" : "var(--cream)", color: newType === t ? "white" : "var(--text-muted)", cursor: "pointer", textTransform: "capitalize" }}>
+                {t}
+              </button>
+            ))}
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "10px" }}>
+            <div>
+              <label style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "var(--text-muted)", marginBottom: "5px", letterSpacing: "0.04em", textTransform: "uppercase" }}>
+                {newType === "formula" ? "Label / Expression" : "Term"}
+              </label>
+              <input value={newLabel} onChange={e => setNewLabel(e.target.value)}
+                placeholder={newType === "formula" ? "e.g. A^T · A" : "e.g. Gradient"}
+                style={inputStyle} />
+            </div>
+            <div>
+              <label style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "var(--text-muted)", marginBottom: "5px", letterSpacing: "0.04em", textTransform: "uppercase" }}>Topic</label>
+              <input value={newTopic} onChange={e => setNewTopic(e.target.value)}
+                placeholder="e.g. Linear Algebra"
+                list="topic-suggestions"
+                style={inputStyle} />
+              {existingTopics.length > 0 && (
+                <datalist id="topic-suggestions">
+                  {existingTopics.map(t => <option key={t} value={t} />)}
+                </datalist>
+              )}
+            </div>
+          </div>
+
+          <div style={{ marginBottom: "1rem" }}>
+            <label style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "var(--text-muted)", marginBottom: "5px", letterSpacing: "0.04em", textTransform: "uppercase" }}>
+              {newType === "formula" ? "What it means / when to use it" : "Definition"}
+            </label>
+            <textarea value={newContext} onChange={e => setNewContext(e.target.value)}
+              onKeyDown={e => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) submitNew(); }}
+              placeholder={newType === "formula" ? "Describe what this formula represents and when it applies…" : "Define this term in plain language…"}
+              rows={3}
+              style={{ ...inputStyle, resize: "vertical", lineHeight: 1.55 }} />
+          </div>
+
+          <div style={{ display: "flex", gap: "8px" }}>
+            <button onClick={submitNew} disabled={!newLabel.trim() || !newContext.trim() || !newTopic.trim()}
+              style={{ padding: "9px 22px", background: (newLabel.trim() && newContext.trim() && newTopic.trim()) ? "var(--pine)" : "var(--cream-dark)", color: (newLabel.trim() && newContext.trim() && newTopic.trim()) ? "white" : "var(--text-muted)", border: "none", borderRadius: "8px", fontSize: "13px", fontWeight: 600, cursor: (newLabel.trim() && newContext.trim() && newTopic.trim()) ? "pointer" : "default", boxShadow: (newLabel.trim() && newContext.trim() && newTopic.trim()) ? "0 2px 8px rgba(26,58,42,0.2)" : "none" }}>
+              Add to sheet
+            </button>
+            <button onClick={() => { setAdding(false); setNewLabel(""); setNewContext(""); setNewTopic(""); }}
+              style={{ padding: "9px 16px", background: "none", border: "1.5px solid var(--border)", borderRadius: "8px", fontSize: "13px", color: "var(--text-muted)", cursor: "pointer" }}>
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
       <Section items={formulaItems} heading="Formulas & Expressions" color="var(--pine)" ftype="formulas" />
       <Section items={definitionItems} heading="Definitions" color="var(--text-mid)" ftype="definitions" />
     </div>
