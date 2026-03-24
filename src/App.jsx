@@ -824,6 +824,10 @@ export default function App() {
   const [sessions, setSessions] = useState(() => stor.get(`cstutor_${COURSE.id}_sessions`, []));
   const [formulas, setFormulas] = useState(() => stor.get(`cstutor_${COURSE.id}_formulas`, []));
   const [flagged, setFlagged] = useState(() => stor.get(`cstutor_${COURSE.id}_flagged`, []));
+  const [savedSession, setSavedSession] = useState(() => {
+    const s = stor.get(`cstutor_${COURSE.id}_current`, null);
+    return (s?.phase && s.phase !== "topic") ? s : null;
+  });
   const sessionSavedRef = useRef(false);
 
   // Persist cross-session data
@@ -831,17 +835,15 @@ export default function App() {
   useEffect(() => stor.set(`cstutor_${COURSE.id}_formulas`, formulas), [formulas]);
   useEffect(() => stor.set(`cstutor_${COURSE.id}_flagged`, flagged), [flagged]);
 
-  // Restore session on mount (including completed lessons)
-  useEffect(() => {
-    const s = stor.get(`cstutor_${COURSE.id}_current`, null);
-    if (s?.phase && s.phase !== "topic") {
-      setTopic(s.topic || ""); setSections(s.sections || []); setQuestions(s.questions || []);
-      setAnswers(s.answers || {}); setResults(s.results || null);
-      setFollowUpSections(s.followUpSections || []); setVideos(s.videos || []);
-      setPhase(s.phase);
-      if (s.phase === "done") sessionSavedRef.current = true;
-    }
-  }, []);
+  const continueSession = () => {
+    const s = savedSession;
+    setSavedSession(null);
+    setTopic(s.topic || ""); setSections(s.sections || []); setQuestions(s.questions || []);
+    setAnswers(s.answers || {}); setResults(s.results || null);
+    setFollowUpSections(s.followUpSections || []); setVideos(s.videos || []);
+    if (s.phase === "done") sessionSavedRef.current = true;
+    setPhase(s.phase);
+  };
 
   // Save session on state changes (all phases except home screen)
   useEffect(() => {
@@ -870,7 +872,7 @@ export default function App() {
     doLesson();
   };
 
-  const doLesson = () => wrap(async () => {
+  const doLesson = () => { setSavedSession(null); return wrap(async () => {
     const sectionPrompt = (titles) => `Build part of a lesson on "${topic}" for a smart student who may not know this topic deeply yet.
 
 Return JSON with exactly this structure — sections array only, no other keys:
@@ -915,7 +917,7 @@ IMPORTANT: prose must be real paragraph text, not placeholder instructions. keyI
       });
     }
     setPhase("learn");
-  }, "Building your lesson…");
+  }, "Building your lesson…"); };
 
   const doQuiz = () => wrap(async () => {
     const summary = sections.map(s => s.title + ": " + (s.prose || "").slice(0, 400)).join("\n\n");
@@ -982,6 +984,7 @@ Return JSON for a single re-instruction section:
 
   const reset = () => {
     sessionSavedRef.current = false;
+    setSavedSession(null);
     stor.set(`cstutor_${COURSE.id}_current`, null);
     setView("session"); setPhase("topic"); setTopic(""); setSections([]); setQuestions([]);
     setAnswers({}); setResults(null); setFollowUpSections([]); setVideos([]); setChatHistory([]); setError("");
@@ -1016,8 +1019,19 @@ Return JSON for a single re-instruction section:
       {/* TOPIC */}
       {view === "session" && !loading && phase === "topic" && (
         <div>
+          {savedSession && (
+            <div style={{ background: "var(--color-background-primary)", border: "0.5px solid #00693e", borderRadius: "var(--border-radius-lg)", padding: "1.25rem 1.5rem", marginBottom: "1rem", display: "flex", alignItems: "center", gap: "14px" }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: "11px", fontWeight: 700, color: "#00693e", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "3px" }}>
+                  {{ learn: "Lesson in progress", quiz: "Quiz in progress", grade: "Quiz graded", followup: "Review in progress", done: "Session complete" }[savedSession.phase] || "Session saved"}
+                </div>
+                <div style={{ fontSize: "15px", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{savedSession.topic}</div>
+              </div>
+              <button onClick={continueSession} style={{ padding: "9px 20px", background: "#00693e", color: "white", border: "none", borderRadius: "var(--border-radius-md)", fontSize: "13px", fontWeight: 600, cursor: "pointer", flexShrink: 0 }}>Continue →</button>
+            </div>
+          )}
           <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: "var(--border-radius-lg)", padding: "1.5rem", marginBottom: "1.5rem" }}>
-            <label style={{ display: "block", fontSize: "13px", fontWeight: 500, color: "var(--color-text-secondary)", marginBottom: "8px" }}>What would you like to study?</label>
+            <label style={{ display: "block", fontSize: "13px", fontWeight: 500, color: "var(--color-text-secondary)", marginBottom: "8px" }}>{savedSession ? "Or start a new topic:" : "What would you like to study?"}</label>
             <input type="text" value={topic} onChange={e => setTopic(e.target.value)} onKeyDown={e => e.key === "Enter" && topic.trim() && doLesson()}
               placeholder="e.g. Gradient Descent, SVD, Eigenvalues…"
               style={{ width: "100%", boxSizing: "border-box", padding: "10px 12px", fontSize: "15px", borderRadius: "var(--border-radius-md)", border: "0.5px solid var(--color-border-secondary)", background: "var(--color-background-secondary)", color: "var(--color-text-primary)", outline: "none" }} />
