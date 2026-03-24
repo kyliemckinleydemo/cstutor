@@ -555,8 +555,8 @@ function TopNav({ view, setView, onHome, sessionCount, formulaCount, dueCount, u
     <div style={{ position: "sticky", top: 0, zIndex: 20, background: "var(--color-background-primary,#fff)", borderBottom: "0.5px solid var(--color-border-tertiary)", marginBottom: "1.5rem", marginLeft: "-2rem", marginRight: "-2rem", padding: "0 2rem" }}>
       <div style={{ display: "flex", alignItems: "center", gap: "12px", height: "52px" }}>
         <button onClick={onHome} style={{ display: "flex", alignItems: "center", gap: "8px", background: "none", border: "none", cursor: "pointer", padding: 0, flexShrink: 0 }}>
-          <div style={{ width: "28px", height: "28px", borderRadius: "50%", background: "#00693e", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-            <img src="https://communications.dartmouth.edu/sites/communications/files/2024-07/lone-pine-rev.png" alt="Dartmouth" style={{ width: "18px", height: "18px", objectFit: "contain" }} />
+          <div style={{ width: "34px", height: "34px", borderRadius: "50%", background: "#00693e", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <img src="https://communications.dartmouth.edu/sites/communications/files/2024-07/lone-pine-rev.png" alt="Dartmouth" style={{ width: "24px", height: "24px", objectFit: "contain" }} />
           </div>
           <span style={{ fontSize: "14px", fontWeight: 700, color: "var(--color-text-primary)", letterSpacing: "-0.01em" }}>{COURSE_TITLE}</span>
           <span style={{ fontSize: "11px", color: "var(--color-text-tertiary)", fontWeight: 500 }}>{COURSE_LABEL}</span>
@@ -832,43 +832,82 @@ function SignInView({ onSignedIn }) {
     setLoading(false);
   };
 
+  const features = COURSE.id === "cosc77"
+    ? [
+        { icon: "📐", label: "Deep lessons", desc: "First-principles explanations, not bullet points" },
+        { icon: "🔬", label: "Formula sheet", desc: "Auto-built from every lesson you study" },
+        { icon: "🎯", label: "Adaptive quizzing", desc: "Graded answers with targeted follow-ups" },
+        { icon: "🔁", label: "Spaced repetition", desc: "AI-generated review questions on weak spots" },
+      ]
+    : [
+        { icon: "💡", label: "Clear explanations", desc: "Concepts in plain English before the code" },
+        { icon: "☕", label: "Java examples", desc: "Real code you'd write in class or on a job" },
+        { icon: "🎯", label: "Adaptive quizzing", desc: "Graded answers with targeted follow-ups" },
+        { icon: "🔁", label: "Spaced repetition", desc: "AI-generated review questions on weak spots" },
+      ];
+
   if (sent) return (
-    <div style={{ minHeight: "60vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
-      <div style={{ textAlign: "center", maxWidth: "380px" }}>
-        <div style={{ width: "64px", height: "64px", borderRadius: "50%", background: "#e6f3ed", border: "2px solid #00693e", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 1.5rem", fontSize: "26px" }}>✉</div>
-        <div style={{ fontSize: "20px", fontWeight: 700, marginBottom: "10px", letterSpacing: "-0.01em" }}>Check your email</div>
-        <div style={{ fontSize: "14px", color: "var(--color-text-secondary)", lineHeight: "1.65" }}>
+    <div style={{ minHeight: "100vh", background: "linear-gradient(160deg, #003d24 0%, #00693e 50%, #e6f3ed 100%)", display: "flex", alignItems: "center", justifyContent: "center", padding: "2rem" }}>
+      <div style={{ textAlign: "center", maxWidth: "380px", background: "white", borderRadius: "16px", padding: "3rem 2.5rem", boxShadow: "0 8px 40px rgba(0,0,0,0.18)" }}>
+        <div style={{ width: "72px", height: "72px", borderRadius: "50%", background: "#e6f3ed", border: "3px solid #00693e", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 1.5rem", fontSize: "30px" }}>✉</div>
+        <div style={{ fontSize: "22px", fontWeight: 700, marginBottom: "12px", letterSpacing: "-0.01em" }}>Check your email</div>
+        <div style={{ fontSize: "14px", color: "#555", lineHeight: "1.7" }}>
           We sent a sign-in link to <strong>{email}</strong>.<br />
           It expires in 15 minutes.
         </div>
-        <div style={{ marginTop: "10px", fontSize: "12px", color: "var(--color-text-tertiary)" }}>Don't see it? Check your spam folder.</div>
-        <button onClick={() => setSent(false)} style={{ marginTop: "1.75rem", fontSize: "13px", background: "none", border: "0.5px solid var(--color-border-tertiary)", borderRadius: "20px", padding: "5px 14px", color: "var(--color-text-tertiary)", cursor: "pointer" }}>Use a different email</button>
+        <div style={{ marginTop: "12px", fontSize: "12px", color: "#999" }}>Don't see it? Check your spam folder.</div>
+        <button onClick={() => setSent(false)} style={{ marginTop: "2rem", fontSize: "13px", background: "none", border: "1px solid #ddd", borderRadius: "20px", padding: "6px 16px", color: "#777", cursor: "pointer" }}>Use a different email</button>
       </div>
     </div>
   );
 
   return (
-    <div style={{ minHeight: "60vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
-      <div style={{ width: "100%", maxWidth: "400px" }}>
-        <div style={{ textAlign: "center", marginBottom: "2.5rem" }}>
-          <img src="https://communications.dartmouth.edu/sites/communications/files/2024-08/dartmouth-lone-pine_1.jpg" alt="Dartmouth" style={{ width: "64px", height: "64px", objectFit: "contain", marginBottom: "1rem" }} />
-          <div style={{ fontSize: "26px", fontWeight: 700, letterSpacing: "-0.02em", marginBottom: "6px" }}>{COURSE_TITLE}</div>
-          <div style={{ fontSize: "15px", color: "var(--color-text-secondary)" }}>{COURSE_LABEL}</div>
-          <div style={{ fontSize: "13px", color: "var(--color-text-tertiary)", marginTop: "4px" }}>{COURSE_SUBTITLE}</div>
+    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+      {/* Green hero */}
+      <div style={{ background: "linear-gradient(135deg, #003d24 0%, #00693e 100%)", color: "white", padding: "3.5rem 2rem 4rem", textAlign: "center" }}>
+        <div style={{ maxWidth: "640px", margin: "0 auto" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "14px", marginBottom: "1.75rem" }}>
+            <div style={{ width: "56px", height: "56px", borderRadius: "50%", background: "rgba(255,255,255,0.15)", border: "2px solid rgba(255,255,255,0.3)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <img src="https://communications.dartmouth.edu/sites/communications/files/2024-07/lone-pine-rev.png" alt="Dartmouth" style={{ width: "38px", height: "38px", objectFit: "contain" }} />
+            </div>
+            <div>
+              <div style={{ fontSize: "13px", fontWeight: 600, opacity: 0.75, letterSpacing: "0.08em", textTransform: "uppercase" }}>{COURSE_LABEL}</div>
+              <div style={{ fontSize: "28px", fontWeight: 800, letterSpacing: "-0.02em", lineHeight: 1.1 }}>{COURSE_TITLE}</div>
+            </div>
+          </div>
+          <div style={{ fontSize: "18px", opacity: 0.9, lineHeight: 1.5, marginBottom: "2.5rem", fontWeight: 400 }}>
+            An AI study partner built for your course.<br />
+            <span style={{ opacity: 0.7, fontSize: "15px" }}>{COURSE_SUBTITLE}</span>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", textAlign: "left", maxWidth: "520px", margin: "0 auto" }}>
+            {features.map(f => (
+              <div key={f.label} style={{ background: "rgba(255,255,255,0.1)", borderRadius: "10px", padding: "14px 16px", border: "1px solid rgba(255,255,255,0.12)" }}>
+                <div style={{ fontSize: "20px", marginBottom: "5px" }}>{f.icon}</div>
+                <div style={{ fontSize: "13px", fontWeight: 700, marginBottom: "2px" }}>{f.label}</div>
+                <div style={{ fontSize: "12px", opacity: 0.7, lineHeight: 1.4 }}>{f.desc}</div>
+              </div>
+            ))}
+          </div>
         </div>
-        <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: "var(--border-radius-lg)", padding: "2.25rem", boxShadow: "0 2px 16px rgba(0,0,0,0.07)" }}>
-          <div style={{ fontSize: "18px", fontWeight: 700, marginBottom: "6px", letterSpacing: "-0.01em" }}>Sign in</div>
-          <div style={{ fontSize: "14px", color: "var(--color-text-secondary)", marginBottom: "1.75rem" }}>No password — we'll email you a sign-in link.</div>
-          {error && <div style={{ fontSize: "13px", color: "#a32d2d", background: "#fcebeb", padding: "10px 14px", borderRadius: "var(--border-radius-md)", marginBottom: "1rem" }}>{error}</div>}
-          <input type="email" value={email} onChange={e => setEmail(e.target.value)} onKeyDown={e => e.key === "Enter" && send()}
-            placeholder="your@email.com" autoFocus
-            style={{ width: "100%", boxSizing: "border-box", padding: "13px 15px", fontSize: "16px", borderRadius: "var(--border-radius-md)", border: "0.5px solid var(--color-border-secondary)", background: "var(--color-background-secondary)", color: "var(--color-text-primary)", outline: "none", marginBottom: "12px" }} />
-          <button onClick={send} disabled={!email.trim() || loading}
-            style={{ width: "100%", padding: "13px", background: email.trim() ? "#00693e" : "var(--color-background-secondary)", color: email.trim() ? "white" : "var(--color-text-tertiary)", border: "none", borderRadius: "var(--border-radius-md)", fontSize: "15px", fontWeight: 600, cursor: email.trim() ? "pointer" : "default", transition: "background 0.15s" }}>
-            {loading ? "Sending…" : "Send sign-in link →"}
-          </button>
+      </div>
+
+      {/* Sign-in card */}
+      <div style={{ flex: 1, background: "#f7f8fa", display: "flex", alignItems: "flex-start", justifyContent: "center", padding: "3rem 2rem" }}>
+        <div style={{ width: "100%", maxWidth: "400px" }}>
+          <div style={{ background: "white", border: "1px solid #e5e7eb", borderRadius: "14px", padding: "2.5rem", boxShadow: "0 4px 24px rgba(0,0,0,0.08)" }}>
+            <div style={{ fontSize: "20px", fontWeight: 700, marginBottom: "6px", letterSpacing: "-0.01em" }}>Sign in to get started</div>
+            <div style={{ fontSize: "14px", color: "#666", marginBottom: "1.75rem" }}>No password — we'll email you a one-click sign-in link.</div>
+            {error && <div style={{ fontSize: "13px", color: "#a32d2d", background: "#fcebeb", padding: "10px 14px", borderRadius: "8px", marginBottom: "1rem" }}>{error}</div>}
+            <input type="email" value={email} onChange={e => setEmail(e.target.value)} onKeyDown={e => e.key === "Enter" && send()}
+              placeholder="your@email.com" autoFocus
+              style={{ width: "100%", boxSizing: "border-box", padding: "13px 15px", fontSize: "16px", borderRadius: "8px", border: "1px solid #d1d5db", background: "#fafafa", color: "#111", outline: "none", marginBottom: "12px" }} />
+            <button onClick={send} disabled={!email.trim() || loading}
+              style={{ width: "100%", padding: "13px", background: email.trim() ? "#00693e" : "#e5e7eb", color: email.trim() ? "white" : "#999", border: "none", borderRadius: "8px", fontSize: "15px", fontWeight: 600, cursor: email.trim() ? "pointer" : "default", transition: "background 0.15s" }}>
+              {loading ? "Sending…" : "Send sign-in link →"}
+            </button>
+          </div>
+          <div style={{ textAlign: "center", marginTop: "1.25rem", fontSize: "13px", color: "#999" }}>Your study data syncs across all your devices.</div>
         </div>
-        <div style={{ textAlign: "center", marginTop: "1.25rem", fontSize: "13px", color: "var(--color-text-tertiary)" }}>Your study data syncs across all your devices.</div>
       </div>
     </div>
   );
@@ -1136,8 +1175,8 @@ Return JSON for a single re-instruction section:
   if (authLoading) return (
     <div style={{ maxWidth: "1100px", margin: "0 auto", padding: "0 2rem 2rem", fontFamily: "var(--font-sans,system-ui)", color: "var(--color-text-primary)" }}>
       <div style={{ display: "flex", alignItems: "center", gap: "8px", height: "52px", borderBottom: "0.5px solid var(--color-border-tertiary)", marginBottom: "1.5rem", marginLeft: "-2rem", marginRight: "-2rem", paddingLeft: "2rem" }}>
-        <div style={{ width: "28px", height: "28px", borderRadius: "50%", background: "#00693e", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-          <img src="https://communications.dartmouth.edu/sites/communications/files/2024-07/lone-pine-rev.png" alt="Dartmouth" style={{ width: "18px", height: "18px", objectFit: "contain" }} />
+        <div style={{ width: "34px", height: "34px", borderRadius: "50%", background: "#00693e", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+          <img src="https://communications.dartmouth.edu/sites/communications/files/2024-07/lone-pine-rev.png" alt="Dartmouth" style={{ width: "24px", height: "24px", objectFit: "contain" }} />
         </div>
         <span style={{ fontSize: "14px", fontWeight: 700 }}>{COURSE_TITLE}</span>
       </div>
@@ -1146,12 +1185,7 @@ Return JSON for a single re-instruction section:
   );
 
   if (!user) return (
-    <div style={{ maxWidth: "1100px", margin: "0 auto", padding: "0 2rem 2rem", fontFamily: "var(--font-sans,system-ui)", color: "var(--color-text-primary)" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: "7px", height: "52px", borderBottom: "0.5px solid var(--color-border-tertiary)", marginBottom: "1.5rem", marginLeft: "-2rem", marginRight: "-2rem", paddingLeft: "2rem" }}>
-        <div style={{ width: "7px", height: "7px", borderRadius: "50%", background: "#00693e" }} />
-        <span style={{ fontSize: "14px", fontWeight: 700 }}>{COURSE_TITLE}</span>
-        <span style={{ fontSize: "11px", color: "var(--color-text-tertiary)", fontWeight: 500 }}>{COURSE_LABEL}</span>
-      </div>
+    <div style={{ fontFamily: "var(--font-sans,system-ui)", color: "var(--color-text-primary)", minHeight: "100vh" }}>
       <SignInView />
     </div>
   );
