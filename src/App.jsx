@@ -293,7 +293,7 @@ Return ONLY the code block, no prose before or after.`
         {loading ? "loading…" : open ? `Hide example code (${CODE_LANG}) ×` : `Show example code (${CODE_LANG}) →`}
       </button>
       {open && (
-        <div style={{ marginTop: "6px", borderRadius: "var(--border-radius-md)", background: "#1e1e1e", overflow: "hidden" }}>
+        <div style={{ marginTop: "6px", borderRadius: "var(--border-radius-md)", background: "#1e1e1e", overflow: "hidden", maxWidth: "100%" }}>
           {loading
             ? <div style={{ padding: "1rem", display: "flex", alignItems: "center", gap: "10px" }}><LoadDots /><span style={{ fontSize: "12px", color: "#888" }}>Generating example…</span></div>
             : <>
@@ -585,7 +585,7 @@ function HelpView() {
     </div>
   );
   return (
-    <div style={{ maxWidth: "600px" }}>
+    <div style={{ maxWidth: "800px" }}>
       <Section title="The Study Flow">
         <Item label="1. Pick a topic">Type anything or click a suggested chip, then hit Start Lesson.</Item>
         <Item label="2. Read the lesson">4 sections: intuition, mechanics, worked example, pitfalls. Click any bolded term for a deep dive.</Item>
@@ -996,7 +996,7 @@ Return JSON for a single re-instruction section:
   const dueCount = flagged.filter(f => f.dueDate <= today()).length;
 
   return (
-    <div style={{ maxWidth: "720px", margin: "0 auto", padding: "0 1.5rem 2rem", fontFamily: "var(--font-sans,system-ui)", color: "var(--color-text-primary)" }}>
+    <div style={{ maxWidth: "1100px", margin: "0 auto", padding: "0 2rem 2rem", fontFamily: "var(--font-sans,system-ui)", color: "var(--color-text-primary)" }}>
       <TopNav view={view} setView={setView} onHome={reset} sessionCount={sessions.length} formulaCount={formulas.length} dueCount={dueCount} />
       {view === "history" && <HistoryView sessions={sessions} />}
       {view === "formulas" && <FormulasView formulas={formulas} setFormulas={setFormulas} />}
