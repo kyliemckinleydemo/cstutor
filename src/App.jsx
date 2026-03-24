@@ -530,14 +530,40 @@ function HistoryView({ sessions }) {
 }
 
 function FormulasView({ formulas }) {
-  const byTopic = formulas.reduce((acc, f) => { (acc[f.topic] = acc[f.topic] || []).push(f); return acc; }, {});
-  const topics = Object.keys(byTopic);
+  const formulaItems = formulas.filter(f => f.type !== "definition");
+  const definitionItems = formulas.filter(f => f.type === "definition");
 
-  if (!topics.length) return (
+  if (!formulas.length) return (
     <div style={{ textAlign: "center", padding: "3rem 1rem", color: "var(--color-text-tertiary)", fontSize: "14px" }}>
-      No formulas yet — complete a lesson to start building your sheet.
+      No entries yet — complete a lesson to start building your sheet.
     </div>
   );
+
+  const Section = ({ items, heading, color }) => {
+    if (!items.length) return null;
+    const byTopic = items.reduce((acc, f) => { (acc[f.topic] = acc[f.topic] || []).push(f); return acc; }, {});
+    return (
+      <div style={{ marginBottom: "1.5rem" }}>
+        <div style={{ fontSize: "11px", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color, marginBottom: "0.75rem" }}>{heading}</div>
+        {Object.keys(byTopic).map(topic => (
+          <div key={topic} style={{ marginBottom: "1rem", pageBreakInside: "avoid" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "0.4rem" }}>
+              <div style={{ width: "3px", height: "13px", background: color, borderRadius: "2px", flexShrink: 0 }} />
+              <span style={{ fontSize: "12px", fontWeight: 700, color: "var(--color-text-primary)" }}>{topic}</span>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "3px" }}>
+              {byTopic[topic].map((f, i) => (
+                <div key={i} style={{ display: "flex", gap: "8px", alignItems: "flex-start", padding: "4px 8px", background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: "5px" }}>
+                  <code style={{ fontFamily: "var(--font-mono,monospace)", fontSize: "11px", background: "rgba(0,105,62,0.09)", color: "#004d2e", padding: "1px 6px", borderRadius: "3px", fontWeight: 600, whiteSpace: "pre", flexShrink: 0 }}>{f.label}</code>
+                  <span style={{ fontSize: "11px", color: "var(--color-text-secondary)", lineHeight: "1.5" }}>{f.context}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  };
 
   return (
     <div>
@@ -545,22 +571,8 @@ function FormulasView({ formulas }) {
       <div className="no-print" style={{ display: "flex", justifyContent: "flex-end", marginBottom: "0.75rem" }}>
         <button onClick={() => window.print()} style={{ padding: "5px 14px", fontSize: "12px", fontWeight: 600, borderRadius: "var(--border-radius-md)", border: "0.5px solid var(--color-border-secondary)", background: "var(--color-background-secondary)", color: "var(--color-text-secondary)", cursor: "pointer" }}>Print / Save PDF</button>
       </div>
-      {topics.map(topic => (
-        <div key={topic} style={{ marginBottom: "1.25rem", pageBreakInside: "avoid" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "0.5rem" }}>
-            <div style={{ width: "3px", height: "14px", background: "#00693e", borderRadius: "2px", flexShrink: 0 }} />
-            <span style={{ fontSize: "12px", fontWeight: 700, color: "var(--color-text-primary)", letterSpacing: "-0.01em" }}>{topic}</span>
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: "3px" }}>
-            {byTopic[topic].map((f, i) => (
-              <div key={i} style={{ display: "flex", gap: "8px", alignItems: "flex-start", padding: "4px 8px", background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: "5px" }}>
-                <code style={{ fontFamily: "var(--font-mono,monospace)", fontSize: "11px", background: "rgba(0,105,62,0.09)", color: "#004d2e", padding: "1px 6px", borderRadius: "3px", fontWeight: 600, whiteSpace: "nowrap", flexShrink: 0 }}>{f.label}</code>
-                <span style={{ fontSize: "11px", color: "var(--color-text-secondary)", lineHeight: "1.5" }}>{f.context}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      ))}
+      <Section items={formulaItems} heading="Formulas & Expressions" color="#00693e" />
+      <Section items={definitionItems} heading="Definitions" color="#555" />
     </div>
   );
 }
@@ -718,13 +730,13 @@ Return JSON with exactly this structure — sections array only, no other keys:
       "title": "${title}",
       "prose": "Write 3 full connected paragraphs (no bullets, no headers inside). ${note} Each paragraph minimum 60 words.",
       "keyItems": [
-        { "label": "formula or key term", "context": "one sentence on what this refers to" }
+        { "label": "the exact formula, equation, recurrence, or Big-O expression — or a key term if no formula applies", "context": "one sentence explaining what it means or where it comes from", "type": "formula" }
       ]
     }`).join(",\n    ")}
   ]
 }
 
-IMPORTANT: prose must be real paragraph text, not placeholder instructions. keyItems: always include 2-3 per section — key formulas, terms, or concepts a student must know. Never return an empty array.`;
+IMPORTANT: prose must be real paragraph text, not placeholder instructions. keyItems: always include 2-3 per section. Prioritize actual formulas, equations, recurrences, and complexity expressions (e.g. T(n) = 2T(n/2) + O(n), O(n log n), f(x) = wx + b). Use type "formula" for these. Use type "definition" only for pure conceptual terms with no associated formula. Never return an empty array.`;
 
     const [r1, r2, ytVideos] = await Promise.all([
       askJSON([{ role: "user", content: sectionPrompt([
