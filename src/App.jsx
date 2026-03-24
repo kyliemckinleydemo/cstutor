@@ -577,6 +577,7 @@ function HistoryView({ sessions }) {
 }
 
 function FormulasView({ formulas, setFormulas }) {
+  const [filter, setFilter] = useState("all");
   const formulaItems = formulas.filter(f => f.type === "formula");
   const definitionItems = formulas.filter(f => f.type !== "formula");
 
@@ -588,11 +589,21 @@ function FormulasView({ formulas, setFormulas }) {
 
   const deleteEntry = (f) => setFormulas(prev => prev.filter(x => !(x.topic === f.topic && x.label === f.label)));
 
-  const Section = ({ items, heading, color }) => {
+  const printHideRule = filter === "formulas"
+    ? `@media print { [data-ftype="definition"] { display: none !important; } }`
+    : filter === "definitions"
+    ? `@media print { [data-ftype="formula"] { display: none !important; } }`
+    : "";
+
+  const Section = ({ items, heading, color, ftype }) => {
     if (!items.length) return null;
+    if (filter !== "all" && filter !== ftype) return null;
     const byTopic = items.reduce((acc, f) => { (acc[f.topic] = acc[f.topic] || []).push(f); return acc; }, {});
+    const isFormula = ftype === "formulas";
+    const rowBg = isFormula ? "rgba(0,105,62,0.06)" : "rgba(100,100,110,0.06)";
+    const rowBorder = isFormula ? "0.5px solid rgba(0,105,62,0.2)" : "0.5px solid rgba(100,100,110,0.18)";
     return (
-      <div style={{ marginBottom: "1.5rem" }}>
+      <div data-ftype={ftype} style={{ marginBottom: "1.5rem" }}>
         <div style={{ fontSize: "11px", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color, marginBottom: "0.75rem" }}>{heading}</div>
         {Object.keys(byTopic).map(topic => (
           <div key={topic} style={{ marginBottom: "1rem", pageBreakInside: "avoid" }}>
@@ -602,8 +613,8 @@ function FormulasView({ formulas, setFormulas }) {
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: "3px" }}>
               {byTopic[topic].map((f, i) => (
-                <div key={i} className="no-print-x" style={{ display: "flex", gap: "8px", alignItems: "flex-start", padding: "4px 8px", background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: "5px" }}>
-                  <code style={{ fontFamily: "var(--font-mono,monospace)", fontSize: "11px", background: "rgba(0,105,62,0.09)", color: "#004d2e", padding: "1px 6px", borderRadius: "3px", fontWeight: 600, whiteSpace: "pre", flexShrink: 0 }}>{f.label}</code>
+                <div key={i} data-ftype={ftype} style={{ display: "flex", gap: "8px", alignItems: "flex-start", padding: "4px 8px", background: rowBg, border: rowBorder, borderRadius: "5px" }}>
+                  <code style={{ fontFamily: "var(--font-mono,monospace)", fontSize: "11px", background: isFormula ? "rgba(0,105,62,0.12)" : "rgba(100,100,110,0.12)", color: isFormula ? "#004d2e" : "#444", padding: "1px 6px", borderRadius: "3px", fontWeight: 600, whiteSpace: "pre", flexShrink: 0 }}>{f.label}</code>
                   <span style={{ fontSize: "11px", color: "var(--color-text-secondary)", lineHeight: "1.5", flex: 1 }}>{f.context}</span>
                   <button onClick={() => deleteEntry(f)} className="no-print" style={{ flexShrink: 0, background: "none", border: "none", cursor: "pointer", color: "var(--color-text-tertiary)", fontSize: "13px", lineHeight: 1, padding: "1px 3px", borderRadius: "3px" }}>×</button>
                 </div>
@@ -617,12 +628,17 @@ function FormulasView({ formulas, setFormulas }) {
 
   return (
     <div>
-      <style>{`@media print { .no-print { display: none !important; } body { background: white; } }`}</style>
-      <div className="no-print" style={{ display: "flex", justifyContent: "flex-end", marginBottom: "0.75rem" }}>
+      <style>{`@media print { .no-print { display: none !important; } body { background: white; } } ${printHideRule}`}</style>
+      <div className="no-print" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem" }}>
+        <select value={filter} onChange={e => setFilter(e.target.value)} style={{ padding: "4px 10px", fontSize: "12px", fontWeight: 600, borderRadius: "var(--border-radius-md)", border: "0.5px solid var(--color-border-secondary)", background: "var(--color-background-secondary)", color: "var(--color-text-secondary)", cursor: "pointer" }}>
+          <option value="all">All</option>
+          <option value="formulas">Formulas</option>
+          <option value="definitions">Definitions</option>
+        </select>
         <button onClick={() => window.print()} style={{ padding: "5px 14px", fontSize: "12px", fontWeight: 600, borderRadius: "var(--border-radius-md)", border: "0.5px solid var(--color-border-secondary)", background: "var(--color-background-secondary)", color: "var(--color-text-secondary)", cursor: "pointer" }}>Print / Save PDF</button>
       </div>
-      <Section items={formulaItems} heading="Formulas & Expressions" color="#00693e" />
-      <Section items={definitionItems} heading="Definitions" color="#555" />
+      <Section items={formulaItems} heading="Formulas & Expressions" color="#00693e" ftype="formulas" />
+      <Section items={definitionItems} heading="Definitions" color="#555" ftype="definitions" />
     </div>
   );
 }
