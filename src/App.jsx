@@ -418,14 +418,12 @@ Write in flowing paragraphs, no bullet points. Be thorough — this is a teachin
 function ChatPanel({ topic, sections, questions, answers, results, followUpText, phase, history, setHistory, user }) {
   const displayName = user?.email ? user.email.split("@")[0].split(".")[0] : "You";
   const initials = displayName.slice(0, 1).toUpperCase();
-  const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
   const [thinking, setThinking] = useState(false);
   const bottomRef = useRef(null);
   const inputRef = useRef(null);
 
-  useEffect(() => { if (open && bottomRef.current) bottomRef.current.scrollIntoView({ behavior: "smooth" }); }, [history, open, thinking]);
-  useEffect(() => { if (open) inputRef.current?.focus(); }, [open]);
+  useEffect(() => { if (bottomRef.current) bottomRef.current.scrollIntoView({ behavior: "smooth" }); }, [history, thinking]);
 
   const send = async () => {
     const q = input.trim();
@@ -460,75 +458,73 @@ function ChatPanel({ topic, sections, questions, answers, results, followUpText,
   const qCount = history.filter(m => m.from === "user").length;
 
   return (
-    <div style={{ marginTop: "1.5rem", borderRadius: "var(--border-radius-lg)", border: "0.5px solid var(--color-border-tertiary)", background: "var(--color-background-primary)", overflow: "hidden" }}>
-      <button onClick={() => setOpen(o => !o)} style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.85rem 1.25rem", background: "none", border: "none", cursor: "pointer" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-          <div style={{ width: "26px", height: "26px", borderRadius: "50%", background: "rgba(26,58,42,0.09)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M8 1C4.13 1 1 3.91 1 7.5c0 1.61.62 3.08 1.65 4.22L2 14l2.58-.87C5.55 13.68 6.75 14 8 14c3.87 0 7-2.91 7-6.5S11.87 1 8 1z" fill="var(--pine)" /></svg>
-          </div>
-          <div style={{ textAlign: "left" }}>
-            <div style={{ fontSize: "13px", fontWeight: 600, color: "var(--color-text-primary)" }}>Ask a question</div>
-            <div style={{ fontSize: "11px", color: "var(--color-text-tertiary)" }}>{qCount ? `${qCount} question${qCount !== 1 ? "s" : ""} this session` : "Anything about this topic or session"}</div>
-          </div>
+    <div style={{ marginTop: "1.5rem", borderRadius: "14px", border: "1.5px solid var(--border)", background: "#fff", overflow: "hidden" }}>
+      {/* Header */}
+      <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "0.85rem 1.25rem", borderBottom: "1px solid var(--border)" }}>
+        <div style={{ width: "26px", height: "26px", borderRadius: "50%", background: "rgba(26,58,42,0.09)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M8 1C4.13 1 1 3.91 1 7.5c0 1.61.62 3.08 1.65 4.22L2 14l2.58-.87C5.55 13.68 6.75 14 8 14c3.87 0 7-2.91 7-6.5S11.87 1 8 1z" fill="var(--pine)" /></svg>
         </div>
-        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" style={{ transform: open ? "rotate(180deg)" : "none", transition: "transform 0.2s", color: "var(--color-text-tertiary)" }}>
-          <path d="M3 6l5 5 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      </button>
-      {open && (
-        <div style={{ borderTop: "0.5px solid var(--color-border-tertiary)" }}>
-          {history.length === 0 && (
-            <div style={{ padding: "0.75rem 1.25rem 0.25rem", display: "flex", flexWrap: "wrap", gap: "6px" }}>
-              {quickList.map(q => (
-                <button key={q} onClick={() => { setInput(q); setTimeout(() => inputRef.current?.focus(), 0); }}
-                  style={{ fontSize: "12px", padding: "5px 11px", background: "var(--color-background-secondary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: "20px", cursor: "pointer", color: "var(--color-text-secondary)" }}>
-                  {q}
-                </button>
-              ))}
-            </div>
-          )}
-          {history.length > 0 && (
-            <div style={{ maxHeight: "360px", overflowY: "auto", padding: "1rem 1.25rem", display: "flex", flexDirection: "column", gap: "14px" }}>
-              {history.map((m, i) => (
-                <div key={i} style={{ display: "flex", gap: "10px", flexDirection: m.from === "user" ? "row-reverse" : "row" }}>
-                  <div style={{ width: "24px", height: "24px", borderRadius: "50%", flexShrink: 0, marginTop: "1px", background: m.from === "user" ? "rgba(26,58,42,0.09)" : "var(--color-background-secondary)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    <span style={{ fontSize: "9px", fontWeight: 700, color: m.from === "user" ? "var(--pine)" : "var(--color-text-tertiary)" }}>{m.from === "user" ? initials : "AI"}</span>
-                  </div>
-                  <div style={{ flex: 1, maxWidth: "88%" }}>
-                    <div style={{ fontSize: "11px", color: "var(--color-text-tertiary)", marginBottom: "3px", textAlign: m.from === "user" ? "right" : "left" }}>{m.from === "user" ? displayName : "Tutor"}</div>
-                    <div style={{ background: m.from === "user" ? "rgba(26,58,42,0.09)" : "var(--color-background-secondary)", borderRadius: m.from === "user" ? "12px 12px 2px 12px" : "12px 12px 12px 2px", padding: "10px 14px" }}>
-                      <ProseParagraphs text={m.text} size="13px" />
-                    </div>
-                  </div>
-                </div>
-              ))}
-              {thinking && (
-                <div style={{ display: "flex", gap: "10px" }}>
-                  <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: "var(--color-background-secondary)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    <span style={{ fontSize: "9px", fontWeight: 700, color: "var(--color-text-tertiary)" }}>AI</span>
-                  </div>
-                  <div style={{ background: "var(--color-background-secondary)", borderRadius: "12px 12px 12px 2px", padding: "12px 14px" }}>
-                    <LoadDots />
-                  </div>
-                </div>
-              )}
-              <div ref={bottomRef} />
-            </div>
-          )}
-          <div style={{ padding: "0.75rem 1.25rem", borderTop: history.length > 0 ? "0.5px solid var(--color-border-tertiary)" : "none", display: "flex", gap: "8px", alignItems: "flex-end" }}>
-            <textarea ref={inputRef} value={input} onChange={e => setInput(e.target.value)}
-              onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }}
-              placeholder="Ask anything… (Enter to send)"
-              rows={1}
-              style={{ flex: 1, padding: "9px 12px", fontSize: "13px", lineHeight: "1.5", borderRadius: "var(--border-radius-md)", border: "0.5px solid var(--color-border-secondary)", background: "var(--color-background-secondary)", color: "var(--color-text-primary)", resize: "none", fontFamily: "var(--font-sans,system-ui)", outline: "none", maxHeight: "90px" }}
-            />
-            <button onClick={send} disabled={!input.trim() || thinking}
-              style={{ padding: "9px 14px", background: input.trim() && !thinking ? "var(--pine)" : "var(--color-background-secondary)", color: input.trim() && !thinking ? "white" : "var(--color-text-tertiary)", border: "none", borderRadius: "var(--border-radius-md)", fontSize: "13px", fontWeight: 600, cursor: input.trim() && !thinking ? "pointer" : "default", flexShrink: 0 }}>
-              Send
+        <div>
+          <span style={{ fontSize: "13px", fontWeight: 600, color: "var(--text-dark)" }}>Ask a question</span>
+          <span style={{ fontSize: "12px", color: "var(--text-muted)", marginLeft: "8px" }}>{qCount ? `${qCount} so far` : "Anything about this topic"}</span>
+        </div>
+      </div>
+
+      {/* Quick prompts (no history yet) */}
+      {history.length === 0 && (
+        <div style={{ padding: "0.75rem 1.25rem 0.5rem", display: "flex", flexWrap: "wrap", gap: "6px" }}>
+          {quickList.map(q => (
+            <button key={q} onClick={() => { setInput(q); setTimeout(() => inputRef.current?.focus(), 0); }}
+              style={{ fontSize: "12px", padding: "5px 12px", background: "var(--cream)", border: "1px solid var(--border)", borderRadius: "100px", cursor: "pointer", color: "var(--text-mid)", whiteSpace: "nowrap" }}>
+              {q}
             </button>
-          </div>
+          ))}
         </div>
       )}
+
+      {/* Conversation history */}
+      {history.length > 0 && (
+        <div style={{ maxHeight: "360px", overflowY: "auto", padding: "1rem 1.25rem", display: "flex", flexDirection: "column", gap: "14px" }}>
+          {history.map((m, i) => (
+            <div key={i} style={{ display: "flex", gap: "10px", flexDirection: m.from === "user" ? "row-reverse" : "row" }}>
+              <div style={{ width: "24px", height: "24px", borderRadius: "50%", flexShrink: 0, marginTop: "1px", background: m.from === "user" ? "rgba(26,58,42,0.09)" : "var(--cream)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <span style={{ fontSize: "9px", fontWeight: 700, color: m.from === "user" ? "var(--pine)" : "var(--text-muted)" }}>{m.from === "user" ? initials : "AI"}</span>
+              </div>
+              <div style={{ flex: 1, maxWidth: "88%" }}>
+                <div style={{ fontSize: "11px", color: "var(--text-muted)", marginBottom: "3px", textAlign: m.from === "user" ? "right" : "left" }}>{m.from === "user" ? displayName : "Tutor"}</div>
+                <div style={{ background: m.from === "user" ? "rgba(26,58,42,0.09)" : "var(--cream)", borderRadius: m.from === "user" ? "12px 12px 2px 12px" : "12px 12px 12px 2px", padding: "10px 14px" }}>
+                  <ProseParagraphs text={m.text} size="13px" />
+                </div>
+              </div>
+            </div>
+          ))}
+          {thinking && (
+            <div style={{ display: "flex", gap: "10px" }}>
+              <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: "var(--cream)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <span style={{ fontSize: "9px", fontWeight: 700, color: "var(--text-muted)" }}>AI</span>
+              </div>
+              <div style={{ background: "var(--cream)", borderRadius: "12px 12px 12px 2px", padding: "12px 14px" }}>
+                <LoadDots />
+              </div>
+            </div>
+          )}
+          <div ref={bottomRef} />
+        </div>
+      )}
+
+      {/* Input row — always visible */}
+      <div style={{ padding: "0.75rem 1rem", borderTop: "1px solid var(--border)", display: "flex", gap: "8px", alignItems: "flex-end", background: "var(--warm-white)" }}>
+        <textarea ref={inputRef} value={input} onChange={e => setInput(e.target.value)}
+          onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }}
+          placeholder="Ask anything about this lesson… (Enter to send)"
+          rows={1}
+          style={{ flex: 1, padding: "10px 14px", fontSize: "13px", lineHeight: "1.5", borderRadius: "10px", border: "1.5px solid var(--border)", background: "#fff", color: "var(--text-dark)", resize: "none", fontFamily: "var(--font-sans)", outline: "none", maxHeight: "90px" }}
+        />
+        <button onClick={send} disabled={!input.trim() || thinking}
+          style={{ padding: "10px 18px", background: input.trim() && !thinking ? "var(--pine)" : "var(--cream-dark)", color: input.trim() && !thinking ? "white" : "var(--text-muted)", border: "none", borderRadius: "10px", fontSize: "13px", fontWeight: 600, cursor: input.trim() && !thinking ? "pointer" : "default", flexShrink: 0, boxShadow: input.trim() && !thinking ? "0 2px 6px rgba(26,58,42,0.2)" : "none" }}>
+          Send
+        </button>
+      </div>
     </div>
   );
 }
