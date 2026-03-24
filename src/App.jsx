@@ -62,6 +62,13 @@ async function fetchYouTubeVideos(topic) {
     }));
 }
 
+const stor = {
+  get: (k, fb) => { try { return JSON.parse(localStorage.getItem(k)) ?? fb; } catch { return fb; } },
+  set: (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
+};
+
+const today = () => new Date().toISOString().split("T")[0];
+
 function repairJSON(raw) {
   // Strip fences and trim
   let s = raw.replace(/```json|```/g, "").trim();
@@ -455,6 +462,169 @@ function VideoCard({ video }) {
   );
 }
 
+function NavBar({ view, setView, sessionCount, formulaCount, dueCount }) {
+  const tabs = [
+    { id: "session", label: "New Session" },
+    { id: "history", label: `History${sessionCount ? ` (${sessionCount})` : ""}` },
+    { id: "formulas", label: `Formulas${formulaCount ? ` (${formulaCount})` : ""}` },
+    { id: "review", label: `Review${dueCount ? ` (${dueCount} due)` : ""}`, urgent: dueCount > 0 },
+  ];
+  return (
+    <div style={{ display: "flex", gap: "6px", marginBottom: "1.75rem", flexWrap: "wrap" }}>
+      {tabs.map(t => (
+        <button key={t.id} onClick={() => setView(t.id)}
+          style={{ padding: "6px 14px", fontSize: "12px", fontWeight: 600, borderRadius: "20px", border: view === t.id ? "none" : "0.5px solid var(--color-border-tertiary)", background: view === t.id ? "#00693e" : "var(--color-background-secondary)", color: view === t.id ? "white" : t.urgent ? "#a32d2d" : "var(--color-text-secondary)", cursor: "pointer" }}>
+          {t.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function HistoryView({ sessions }) {
+  if (!sessions.length) return (
+    <div style={{ textAlign: "center", padding: "3rem 1rem", color: "var(--color-text-tertiary)", fontSize: "14px" }}>
+      No sessions yet — start studying to build your history.
+    </div>
+  );
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "0.65rem" }}>
+      {sessions.map((s, i) => {
+        const pct = s.total ? Math.round((s.score / s.total) * 100) : 0;
+        return (
+          <div key={s.id || i} style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: "var(--border-radius-lg)", padding: "1rem 1.25rem", display: "flex", alignItems: "center", gap: "1rem" }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: "15px", fontWeight: 600, marginBottom: "2px" }}>{s.topic}</div>
+              <div style={{ fontSize: "11px", color: "var(--color-text-tertiary)" }}>{s.date}</div>
+              {s.weakAreas?.length > 0 && <div style={{ fontSize: "12px", color: "var(--color-text-secondary)", marginTop: "4px" }}>Struggled: {s.weakAreas.join(", ")}</div>}
+              {s.strongAreas?.length > 0 && <div style={{ fontSize: "12px", color: "#00693e", marginTop: "2px" }}>Strong: {s.strongAreas.join(", ")}</div>}
+            </div>
+            <div style={{ textAlign: "center", flexShrink: 0 }}>
+              <div style={{ fontSize: "24px", fontWeight: 800, color: scoreColor(pct), lineHeight: 1 }}>{pct}%</div>
+              <div style={{ fontSize: "11px", color: "var(--color-text-tertiary)", marginTop: "2px" }}>{s.score}/{s.total}</div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function FormulasView({ formulas }) {
+  const byTopic = formulas.reduce((acc, f) => { (acc[f.topic] = acc[f.topic] || []).push(f); return acc; }, {});
+  const topics = Object.keys(byTopic);
+
+  if (!topics.length) return (
+    <div style={{ textAlign: "center", padding: "3rem 1rem", color: "var(--color-text-tertiary)", fontSize: "14px" }}>
+      No formulas yet — complete a lesson to start building your sheet.
+    </div>
+  );
+
+  return (
+    <div>
+      <style>{`@media print { .no-print { display: none !important; } body { background: white; } }`}</style>
+      <div className="no-print" style={{ display: "flex", justifyContent: "flex-end", marginBottom: "0.75rem" }}>
+        <button onClick={() => window.print()} style={{ padding: "5px 14px", fontSize: "12px", fontWeight: 600, borderRadius: "var(--border-radius-md)", border: "0.5px solid var(--color-border-secondary)", background: "var(--color-background-secondary)", color: "var(--color-text-secondary)", cursor: "pointer" }}>Print / Save PDF</button>
+      </div>
+      {topics.map(topic => (
+        <div key={topic} style={{ marginBottom: "1.25rem", pageBreakInside: "avoid" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "0.5rem" }}>
+            <div style={{ width: "3px", height: "14px", background: "#00693e", borderRadius: "2px", flexShrink: 0 }} />
+            <span style={{ fontSize: "12px", fontWeight: 700, color: "var(--color-text-primary)", letterSpacing: "-0.01em" }}>{topic}</span>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: "3px" }}>
+            {byTopic[topic].map((f, i) => (
+              <div key={i} style={{ display: "flex", gap: "8px", alignItems: "flex-start", padding: "4px 8px", background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: "5px" }}>
+                <code style={{ fontFamily: "var(--font-mono,monospace)", fontSize: "11px", background: "rgba(0,105,62,0.09)", color: "#004d2e", padding: "1px 6px", borderRadius: "3px", fontWeight: 600, whiteSpace: "nowrap", flexShrink: 0 }}>{f.label}</code>
+                <span style={{ fontSize: "11px", color: "var(--color-text-secondary)", lineHeight: "1.5" }}>{f.context}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ReviewView({ flagged, setFlagged, onDone }) {
+  const due = flagged.filter(f => f.dueDate <= today());
+  const [idx, setIdx] = useState(0);
+  const [answer, setAnswer] = useState("");
+  const [result, setResult] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [done, setDone] = useState(false);
+
+  if (!due.length || done) return (
+    <div style={{ textAlign: "center", padding: "3rem 1rem" }}>
+      <div style={{ fontSize: "32px", marginBottom: "0.75rem" }}>{done ? "✓" : "🎉"}</div>
+      <div style={{ fontSize: "16px", fontWeight: 600, marginBottom: "6px" }}>{done ? "Review complete!" : "Nothing due!"}</div>
+      <div style={{ fontSize: "14px", color: "var(--color-text-secondary)", marginBottom: "1.5rem" }}>
+        {done ? `You reviewed ${due.length} question${due.length !== 1 ? "s" : ""}.` : "Come back later when questions are due."}
+      </div>
+      <button onClick={onDone} style={{ padding: "10px 22px", background: "#00693e", color: "white", border: "none", borderRadius: "var(--border-radius-md)", fontSize: "14px", fontWeight: 600, cursor: "pointer" }}>Back to Home</button>
+    </div>
+  );
+
+  const q = due[idx];
+
+  const grade = async () => {
+    if (!answer.trim() || loading) return;
+    setLoading(true);
+    try {
+      const raw = await askJSON([{ role: "user", content: `Grade this answer on "${q.topic}":\n\nQuestion: ${q.question}\nAnswer: ${answer}\n\n1=correct, 0.5=partial, 0=wrong. Return JSON:\n{"score":0,"feedback":"2 specific sentences"}` }]);
+      const parsed = parseJSON(raw);
+      setResult(parsed);
+      const d = new Date();
+      if (parsed.score === 1) d.setDate(d.getDate() + 30);
+      else if (parsed.score === 0.5) d.setDate(d.getDate() + 3);
+      else d.setDate(d.getDate() + 1);
+      const newDate = d.toISOString().split("T")[0];
+      setFlagged(prev => prev.map(f => (f.topic === q.topic && f.question === q.question) ? { ...f, dueDate: newDate } : f));
+    } catch { setResult({ score: 0, feedback: "Could not grade — please try again." }); }
+    setLoading(false);
+  };
+
+  const next = () => {
+    setAnswer(""); setResult(null);
+    if (idx + 1 >= due.length) setDone(true);
+    else setIdx(i => i + 1);
+  };
+
+  return (
+    <div>
+      <div style={{ fontSize: "12px", color: "var(--color-text-tertiary)", marginBottom: "1rem" }}>Question {idx + 1} of {due.length}</div>
+      <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: "var(--border-radius-lg)", padding: "1.25rem 1.5rem" }}>
+        <div style={{ fontSize: "11px", fontWeight: 700, color: "#00693e", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "8px" }}>{q.topic}</div>
+        <p style={{ margin: "0 0 1rem", fontSize: "14px", fontWeight: 500, lineHeight: "1.75" }}>{q.question}</p>
+        {!result ? (
+          <>
+            <textarea value={answer} onChange={e => setAnswer(e.target.value)} onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); grade(); } }}
+              placeholder="Your answer… (Enter to submit)"
+              rows={3} style={{ width: "100%", boxSizing: "border-box", padding: "10px 12px", fontSize: "14px", lineHeight: "1.65", borderRadius: "var(--border-radius-md)", border: "0.5px solid var(--color-border-secondary)", background: "var(--color-background-secondary)", color: "var(--color-text-primary)", resize: "vertical", fontFamily: "var(--font-sans,system-ui)", outline: "none" }} />
+            <div style={{ marginTop: "10px", display: "flex", justifyContent: "flex-end" }}>
+              <button onClick={grade} disabled={!answer.trim() || loading} style={{ padding: "9px 20px", background: answer.trim() && !loading ? "#00693e" : "var(--color-background-secondary)", color: answer.trim() && !loading ? "white" : "var(--color-text-tertiary)", border: "none", borderRadius: "var(--border-radius-md)", fontSize: "13px", fontWeight: 600, cursor: answer.trim() && !loading ? "pointer" : "default" }}>
+                {loading ? "Grading…" : "Submit →"}
+              </button>
+            </div>
+          </>
+        ) : (
+          <div>
+            <div style={{ display: "flex", gap: "10px", alignItems: "flex-start", padding: "0.85rem", background: result.score === 1 ? "#e6f3ed" : result.score === 0.5 ? "#faeeda" : "#fcebeb", borderRadius: "var(--border-radius-md)", marginBottom: "1rem" }}>
+              <span style={{ fontWeight: 700, color: result.score === 1 ? "#00693e" : result.score === 0.5 ? "#ba7517" : "#a32d2d", flexShrink: 0 }}>{result.score === 1 ? "✓" : result.score === 0.5 ? "½" : "✗"}</span>
+              <span style={{ fontSize: "13px", lineHeight: "1.65" }}>{result.feedback}</span>
+            </div>
+            <div style={{ display: "flex", justifyContent: "flex-end" }}>
+              <button onClick={next} style={{ padding: "9px 20px", background: "#00693e", color: "white", border: "none", borderRadius: "var(--border-radius-md)", fontSize: "13px", fontWeight: 600, cursor: "pointer" }}>
+                {idx + 1 < due.length ? "Next →" : "Finish"}
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 const Btn = ({ label, onClick, primary = true, disabled = false }) => (
   <button onClick={onClick} disabled={disabled} style={{ padding: "10px 22px", background: primary && !disabled ? "#00693e" : "transparent", color: primary && !disabled ? "white" : "var(--color-text-secondary)", border: primary ? "none" : "0.5px solid var(--color-border-secondary)", borderRadius: "var(--border-radius-md)", fontSize: "14px", fontWeight: primary ? 600 : 400, cursor: disabled ? "default" : "pointer", opacity: disabled ? 0.5 : 1 }}>
     {label}
@@ -462,6 +632,7 @@ const Btn = ({ label, onClick, primary = true, disabled = false }) => (
 );
 
 export default function App() {
+  const [view, setView] = useState("session");
   const [phase, setPhase] = useState("topic");
   const [topic, setTopic] = useState("");
   const [sections, setSections] = useState([]);
@@ -474,6 +645,42 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [loadMsg, setLoadMsg] = useState("");
   const [error, setError] = useState("");
+
+  const [sessions, setSessions] = useState(() => stor.get("cstutor_sessions", []));
+  const [formulas, setFormulas] = useState(() => stor.get("cstutor_formulas", []));
+  const [flagged, setFlagged] = useState(() => stor.get("cstutor_flagged", []));
+  const sessionSavedRef = useRef(false);
+
+  // Persist cross-session data
+  useEffect(() => stor.set("cstutor_sessions", sessions), [sessions]);
+  useEffect(() => stor.set("cstutor_formulas", formulas), [formulas]);
+  useEffect(() => stor.set("cstutor_flagged", flagged), [flagged]);
+
+  // Restore in-progress session on mount
+  useEffect(() => {
+    const s = stor.get("cstutor_current", null);
+    if (s?.phase && s.phase !== "topic" && s.phase !== "done") {
+      setTopic(s.topic || ""); setSections(s.sections || []); setQuestions(s.questions || []);
+      setAnswers(s.answers || {}); setResults(s.results || null);
+      setFollowUpSections(s.followUpSections || []); setVideos(s.videos || []);
+      setPhase(s.phase);
+    }
+  }, []);
+
+  // Save in-progress session on state changes
+  useEffect(() => {
+    if (phase === "topic" || phase === "done") { stor.set("cstutor_current", null); return; }
+    stor.set("cstutor_current", { topic, sections, questions, answers, results, followUpSections, videos, phase });
+  }, [phase, answers]);
+
+  // Save to history when session completes
+  useEffect(() => {
+    if (phase === "done" && results && !sessionSavedRef.current) {
+      sessionSavedRef.current = true;
+      setSessions(prev => [{ id: Date.now(), topic, date: today(), score: results.score, total: results.total, weakAreas: results.weakAreas || [], strongAreas: results.strongAreas || [] }, ...prev]);
+      stor.set("cstutor_current", null);
+    }
+  }, [phase]);
 
   const wrap = async (fn, msg) => {
     setLoading(true); setLoadMsg(msg); setError("");
@@ -514,8 +721,17 @@ IMPORTANT: prose must be real paragraph text, not placeholder instructions. keyI
 
     const s1 = parseJSON(r1).sections || [];
     const s2 = parseJSON(r2).sections || [];
-    setSections([...s1, ...s2]);
+    const allSecs = [...s1, ...s2];
+    setSections(allSecs);
     setVideos(ytVideos);
+    // Collect key items into formula sheet
+    const newItems = allSecs.flatMap(s => (s.keyItems || []).map(ki => ({ topic, label: ki.label, context: ki.context })));
+    if (newItems.length) {
+      setFormulas(prev => {
+        const seen = new Set(prev.map(f => f.topic + "||" + f.label));
+        return [...prev, ...newItems.filter(ki => !seen.has(ki.topic + "||" + ki.label))];
+      });
+    }
     setPhase("learn");
   }, "Building your lesson…");
 
@@ -534,7 +750,21 @@ IMPORTANT: prose must be real paragraph text, not placeholder instructions. keyI
       role: "user",
       content: `Grade these answers on "${topic}":\n\n${qa}\n\n1 = correct, 0.5 = understands but incomplete, 0 = wrong or blank. Return JSON:\n{"score":N,"total":5,"results":[{"id":1,"score":0|0.5|1,"feedback":"2 specific sentences: what was right, what was wrong or missing"}],"weakAreas":["concept name"],"strongAreas":["concept name"]}`,
     }]);
-    setResults(parseJSON(raw)); setPhase("grade");
+    const parsed = parseJSON(raw);
+    setResults(parsed);
+    // Flag wrong/partial questions for spaced repetition
+    const newFlagged = (parsed.results || [])
+      .map((r, i) => ({ r, q: questions[i] }))
+      .filter(({ r }) => r.score < 1)
+      .map(({ r, q }) => {
+        const d = new Date();
+        d.setDate(d.getDate() + (r.score === 0.5 ? 3 : 1));
+        return { topic, question: q.question, type: q.type, difficulty: q.difficulty, feedback: r.feedback, dueDate: d.toISOString().split("T")[0] };
+      });
+    if (newFlagged.length) {
+      setFlagged(prev => [...prev.filter(f => !newFlagged.some(nf => nf.topic === f.topic && nf.question === f.question)), ...newFlagged]);
+    }
+    setPhase("grade");
   }, "Grading your answers…");
 
   const doFollowUp = () => wrap(async () => {
@@ -569,32 +799,40 @@ Return JSON for a single re-instruction section:
   }, "Preparing targeted review…");
 
   const reset = () => {
-    setPhase("topic"); setTopic(""); setSections([]); setQuestions([]);
+    sessionSavedRef.current = false;
+    setView("session"); setPhase("topic"); setTopic(""); setSections([]); setQuestions([]);
     setAnswers({}); setResults(null); setFollowUpSections([]); setVideos([]); setChatHistory([]); setError("");
   };
 
   const pct = results ? Math.round((results.score / results.total) * 100) : 0;
   const followUpText = followUpSections.map(s => s.prose || "").join(" ");
   const chatProps = { topic, sections, questions, answers, results, followUpText, phase, history: chatHistory, setHistory: setChatHistory };
+  const dueCount = flagged.filter(f => f.dueDate <= today()).length;
+  const showNav = view !== "session" || phase === "topic";
 
   return (
     <div style={{ maxWidth: "720px", margin: "0 auto", padding: "2rem 1.5rem", fontFamily: "var(--font-sans,system-ui)", color: "var(--color-text-primary)" }}>
-      <div style={{ marginBottom: "1.75rem" }}>
+      <div style={{ marginBottom: "1.25rem" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
           <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#00693e" }} />
           <span style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.12em", color: "#00693e", textTransform: "uppercase" }}>Dartmouth COSC 77</span>
         </div>
-        <h1 onClick={reset} style={{ fontSize: "26px", fontWeight: 700, margin: 0, letterSpacing: "-0.02em", cursor: phase !== "topic" ? "pointer" : "default" }}>Study Tutor</h1>
+        <h1 onClick={reset} style={{ fontSize: "26px", fontWeight: 700, margin: 0, letterSpacing: "-0.02em", cursor: (view !== "session" || phase !== "topic") ? "pointer" : "default" }}>Study Tutor</h1>
         <p style={{ fontSize: "13px", color: "var(--color-text-secondary)", margin: "4px 0 0" }}>Deep lessons · Drilldown on any formula · Adaptive quizzing</p>
       </div>
 
-      <PhaseBar phase={phase} />
+      {showNav && <NavBar view={view} setView={setView} sessionCount={sessions.length} formulaCount={formulas.length} dueCount={dueCount} />}
+      {view === "history" && <HistoryView sessions={sessions} />}
+      {view === "formulas" && <FormulasView formulas={formulas} />}
+      {view === "review" && <ReviewView flagged={flagged} setFlagged={setFlagged} onDone={() => setView("session")} />}
 
-      {error && (
+      {view === "session" && <PhaseBar phase={phase} />}
+
+      {view === "session" && error && (
         <div style={{ background: "var(--color-background-danger)", border: "0.5px solid var(--color-border-danger)", borderRadius: "var(--border-radius-md)", padding: "0.75rem 1rem", marginBottom: "1rem", fontSize: "13px", color: "var(--color-text-danger)" }}>{error}</div>
       )}
 
-      {loading && (
+      {view === "session" && loading && (
         <div style={{ padding: "3.5rem 2rem", textAlign: "center" }}>
           <div style={{ display: "flex", justifyContent: "center", marginBottom: "1rem" }}><LoadDots /></div>
           <p style={{ fontSize: "14px", color: "var(--color-text-secondary)", margin: 0 }}>{loadMsg}</p>
@@ -602,7 +840,7 @@ Return JSON for a single re-instruction section:
       )}
 
       {/* TOPIC */}
-      {!loading && phase === "topic" && (
+      {view === "session" && !loading && phase === "topic" && (
         <div>
           <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: "var(--border-radius-lg)", padding: "1.5rem", marginBottom: "1.5rem" }}>
             <label style={{ display: "block", fontSize: "13px", fontWeight: 500, color: "var(--color-text-secondary)", marginBottom: "8px" }}>What would you like to study?</label>
@@ -623,7 +861,7 @@ Return JSON for a single re-instruction section:
       )}
 
       {/* LESSON */}
-      {!loading && phase === "learn" && (
+      {view === "session" && !loading && phase === "learn" && (
         <div>
           <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: "var(--border-radius-lg)", padding: "1.75rem 2rem", marginBottom: "1.25rem" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "1.75rem", paddingBottom: "1.25rem", borderBottom: "0.5px solid var(--color-border-tertiary)" }}>
@@ -654,7 +892,7 @@ Return JSON for a single re-instruction section:
       )}
 
       {/* QUIZ */}
-      {!loading && phase === "quiz" && (
+      {view === "session" && !loading && phase === "quiz" && (
         <div>
           <div style={{ padding: "0.7rem 1rem", background: "var(--color-background-secondary)", borderRadius: "var(--border-radius-md)", fontSize: "13px", color: "var(--color-text-secondary)", marginBottom: "1.25rem" }}>
             5 questions — conceptual, computational, and synthesis. Show your work where relevant.
@@ -687,7 +925,7 @@ Return JSON for a single re-instruction section:
       )}
 
       {/* RESULTS */}
-      {!loading && phase === "grade" && results && (
+      {view === "session" && !loading && phase === "grade" && results && (
         <div>
           <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: "var(--border-radius-lg)", padding: "1.5rem", marginBottom: "1.25rem" }}>
             <div style={{ display: "flex", gap: "1.5rem", alignItems: "center", paddingBottom: "1.25rem", borderBottom: "0.5px solid var(--color-border-tertiary)", marginBottom: "1.25rem" }}>
@@ -724,7 +962,7 @@ Return JSON for a single re-instruction section:
       )}
 
       {/* FOLLOW-UP */}
-      {!loading && phase === "followup" && (
+      {view === "session" && !loading && phase === "followup" && (
         <div>
           <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: "var(--border-radius-lg)", padding: "1.75rem 2rem", marginBottom: "1.25rem" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "1.75rem", paddingBottom: "1.25rem", borderBottom: "0.5px solid var(--color-border-tertiary)" }}>
@@ -747,7 +985,7 @@ Return JSON for a single re-instruction section:
       )}
 
       {/* DONE */}
-      {!loading && phase === "done" && (
+      {view === "session" && !loading && phase === "done" && (
         <div>
           <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: "var(--border-radius-lg)", padding: "2.5rem 2rem", textAlign: "center" }}>
             <div style={{ width: "52px", height: "52px", borderRadius: "50%", background: "#e6f3ed", border: "2px solid #00693e", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 1.25rem", fontSize: "22px", color: "#00693e", fontWeight: 700 }}>✓</div>
