@@ -543,7 +543,7 @@ function VideoCard({ video }) {
 
 function TopNav({ view, setView, onHome, sessionCount, formulaCount, dueCount }) {
   const tabs = [
-    { id: "session", label: "New Session" },
+    { id: "session", label: "New Topic" },
     { id: "history", label: `History${sessionCount ? ` (${sessionCount})` : ""}` },
     { id: "formulas", label: `Formulas/Defs${formulaCount ? ` (${formulaCount})` : ""}` },
     { id: "review", label: `Review${dueCount ? ` (${dueCount})` : ""}`, urgent: dueCount > 0 },
@@ -907,7 +907,7 @@ IMPORTANT: prose must be real paragraph text, not placeholder instructions. keyI
     setSections(allSecs);
     setVideos(ytVideos);
     // Collect key items into formula sheet
-    const newItems = allSecs.flatMap(s => (s.keyItems || []).map(ki => ({ topic, label: ki.label, context: ki.context })));
+    const newItems = allSecs.flatMap(s => (s.keyItems || []).map(ki => ({ topic, label: ki.label, context: ki.context, type: ki.type })));
     if (newItems.length) {
       setFormulas(prev => {
         const seen = new Set(prev.map(f => f.topic + "||" + f.label));
