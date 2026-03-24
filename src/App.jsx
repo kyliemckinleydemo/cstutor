@@ -9,6 +9,7 @@ const COURSES = {
     label: "Dartmouth COSC 77",
     title: "Tutor Agent",
     subtitle: "Deep lessons · Drilldown on any formula · Adaptive quizzing",
+    codeLanguage: "Python",
     system: `You are a patient, thorough tutor for a Dartmouth CS junior taking COSC 77 (Mathematical Foundations of Machine Learning). Your job is to build genuine understanding — not just cover material. Assume the student is smart but may not have deep background in this specific topic yet. Start from first principles. Use plain English before introducing notation. Write in full, connected paragraphs that flow naturally — not bullet points and not terse outlines. Explanations should feel like a knowledgeable friend explaining something carefully, not a textbook. Mathematical notation in plain text: A^T, ||v||, sum_{i=1}^n, grad_theta, x_i, lambda, sigma. Always explain *why* something is true or works before showing *how* to apply it.`,
     suggested: [
       "Eigenvalues & Eigenvectors", "Gradient Descent", "SVD",
@@ -22,6 +23,7 @@ const COURSES = {
     label: "Dartmouth COSC 10",
     title: "Tutor Agent",
     subtitle: "Clear explanations · Code examples · Adaptive quizzing",
+    codeLanguage: "Java",
     system: `You are a patient, thorough tutor for a Dartmouth student taking COSC 10 (Problem Solving via Object-Oriented Programming). Your job is to build genuine understanding — not just cover material. Assume the student is relatively new to computer science. Start from first principles using concrete, relatable examples before introducing technical terms or code. Write in full, connected paragraphs that flow naturally — not bullet points and not terse outlines. Explanations should feel like a knowledgeable friend explaining something carefully, not a textbook. All code examples should be in Java. Always explain *why* something works before showing *how* to use it. Connect every concept to real programs a student might actually write or use.`,
     suggested: [
       "Encapsulation & Classes", "Inheritance & Polymorphism", "Interfaces & Abstraction",
@@ -33,7 +35,7 @@ const COURSES = {
 };
 
 const COURSE = COURSES[import.meta.env.VITE_COURSE_ID] || COURSES.cosc77;
-const { system: SYSTEM, suggested: SUGGESTED, label: COURSE_LABEL, title: COURSE_TITLE, subtitle: COURSE_SUBTITLE } = COURSE;
+const { system: SYSTEM, suggested: SUGGESTED, label: COURSE_LABEL, title: COURSE_TITLE, subtitle: COURSE_SUBTITLE, codeLanguage: CODE_LANG } = COURSE;
 
 async function callAPI(messages, system, maxTokens = 1500, attempt = 0) {
   const res = await fetch(API, {
@@ -249,6 +251,51 @@ Be thorough. Assume nothing except basic algebra.`
   );
 }
 
+function CodeSnippet({ section, topic }) {
+  const [open, setOpen] = useState(false);
+  const [code, setCode] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const load = async () => {
+    if (code) { setOpen(o => !o); return; }
+    setOpen(true);
+    setLoading(true);
+    try {
+      const text = await askProse([{
+        role: "user",
+        content: `We're studying "${topic}", specifically the section "${section.title}".
+
+Write a concise, focused ${CODE_LANG} code example that directly illustrates the core concept from this section. Requirements:
+- Runnable, self-contained code (no missing imports or dependencies)
+- Every non-obvious line has a short inline comment explaining *why*, not just what
+- 15-35 lines — tight and purposeful, no padding
+- End with 2-3 lines of plain English (as comments) explaining what to observe when you run it
+
+Return ONLY the code block, no prose before or after.`
+      }]);
+      // Strip markdown fences if present
+      setCode(text.replace(/^```[\w]*\n?/m, "").replace(/```$/m, "").trim());
+    } catch { setCode("// Could not load example — please try again."); }
+    setLoading(false);
+  };
+
+  return (
+    <div style={{ marginTop: "0.75rem" }}>
+      <button onClick={load} style={{ display: "flex", alignItems: "center", gap: "6px", padding: "5px 11px", fontSize: "11px", fontWeight: 600, background: open ? "#1e1e1e" : "var(--color-background-secondary)", color: open ? "#a8d8a8" : "var(--color-text-secondary)", border: open ? "none" : "0.5px solid var(--color-border-tertiary)", borderRadius: "var(--border-radius-md)", cursor: "pointer" }}>
+        <span style={{ fontFamily: "var(--font-mono,monospace)", fontSize: "10px" }}>{CODE_LANG}</span>
+        {loading ? "loading…" : open ? "hide code ×" : "show code →"}
+      </button>
+      {open && (
+        <div style={{ marginTop: "6px", borderRadius: "var(--border-radius-md)", background: "#1e1e1e", overflow: "hidden" }}>
+          {loading
+            ? <div style={{ padding: "1rem", display: "flex", alignItems: "center", gap: "10px" }}><LoadDots /><span style={{ fontSize: "12px", color: "#888" }}>Generating example…</span></div>
+            : <pre style={{ margin: 0, padding: "1rem 1.25rem", fontSize: "12.5px", lineHeight: "1.65", color: "#d4d4d4", fontFamily: "var(--font-mono,monospace)", overflowX: "auto", whiteSpace: "pre" }}>{code}</pre>}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function LessonSection({ section, topic }) {
   return (
     <div style={{ marginBottom: "2rem" }}>
@@ -257,6 +304,7 @@ function LessonSection({ section, topic }) {
         <h3 style={{ margin: 0, fontSize: "17px", fontWeight: 600, color: "var(--color-text-primary)", letterSpacing: "-0.01em" }}>{section.title}</h3>
       </div>
       <ProseParagraphs text={section.prose} />
+      <CodeSnippet section={section} topic={topic} />
       {section.keyItems?.length > 0 && (
         <div style={{ marginTop: "0.75rem", paddingTop: "0.75rem", borderTop: "0.5px dashed var(--color-border-tertiary)" }}>
           <p style={{ fontSize: "11px", fontWeight: 700, letterSpacing: "0.08em", color: "var(--color-text-tertiary)", textTransform: "uppercase", margin: "0 0 0.6rem" }}>Key items — click any to get a deep explanation</p>
