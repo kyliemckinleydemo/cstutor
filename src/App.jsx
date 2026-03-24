@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 
-const API = "https://api.anthropic.com/v1/messages";
+const API = "/api/proxy";
 const MODEL = "claude-sonnet-4-20250514";
 
 const SYSTEM = `You are a patient, thorough tutor for a Dartmouth CS junior taking COSC 77. Your job is to build genuine understanding — not just cover material. Assume the student is smart but may not have deep background in this specific topic yet. Start from first principles. Use plain English before introducing notation. Write in full, connected paragraphs that flow naturally — not bullet points and not terse outlines. Explanations should feel like a knowledgeable friend explaining something carefully, not a textbook. Mathematical notation in plain text: A^T, ||v||, sum_{i=1}^n, grad_theta, x_i, lambda, sigma. Always explain *why* something is true or works before showing *how* to apply it.`;
@@ -8,12 +8,7 @@ const SYSTEM = `You are a patient, thorough tutor for a Dartmouth CS junior taki
 async function callAPI(messages, system, maxTokens = 1500, attempt = 0) {
   const res = await fetch(API, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": import.meta.env.VITE_API_KEY,
-      "anthropic-version": "2023-06-01",
-      "anthropic-dangerous-direct-browser-access": "true",
-    },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ model: MODEL, max_tokens: maxTokens, system, messages }),
   });
   if (res.status === 429 && attempt < 3) {
