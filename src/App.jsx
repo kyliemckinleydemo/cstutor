@@ -35,6 +35,33 @@ async function askProse(messages) {
   return callAPI(messages, SYSTEM, 1400);
 }
 
+async function fetchYouTubeVideos(topic) {
+  const key = import.meta.env.VITE_YOUTUBE_KEY;
+  if (!key) return [];
+  const searchRes = await fetch(
+    `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(topic + " explained")}&type=video&maxResults=10&key=${key}`
+  );
+  if (!searchRes.ok) return [];
+  const searchData = await searchRes.json();
+  const ids = (searchData.items || []).map(i => i.id.videoId).join(",");
+  if (!ids) return [];
+  const statsRes = await fetch(
+    `https://www.googleapis.com/youtube/v3/videos?part=statistics,snippet&id=${ids}&key=${key}`
+  );
+  if (!statsRes.ok) return [];
+  const statsData = await statsRes.json();
+  return (statsData.items || [])
+    .sort((a, b) => Number(b.statistics.viewCount) - Number(a.statistics.viewCount))
+    .slice(0, 2)
+    .map(v => ({
+      id: v.id,
+      title: v.snippet.title,
+      channel: v.snippet.channelTitle,
+      views: Number(v.statistics.viewCount),
+      thumbnail: v.snippet.thumbnails.medium.url,
+    }));
+}
+
 function repairJSON(raw) {
   // Strip fences and trim
   let s = raw.replace(/```json|```/g, "").trim();
@@ -413,6 +440,21 @@ function ChatPanel({ topic, sections, questions, answers, results, followUpText,
 const scoreColor = p => p >= 80 ? "#00693e" : p >= 60 ? "#ba7517" : "#a32d2d";
 const scoreBg = p => p >= 80 ? "#e6f3ed" : p >= 60 ? "#faeeda" : "#fcebeb";
 
+function VideoCard({ video }) {
+  const fmt = n => n >= 1e6 ? (n / 1e6).toFixed(1) + "M" : n >= 1e3 ? Math.round(n / 1e3) + "K" : String(n);
+  return (
+    <a href={`https://www.youtube.com/watch?v=${video.id}`} target="_blank" rel="noopener noreferrer"
+      style={{ display: "flex", gap: "12px", textDecoration: "none", padding: "0.75rem", borderRadius: "var(--border-radius-md)", border: "0.5px solid var(--color-border-tertiary)", background: "var(--color-background-primary)", flex: "1 1 0", minWidth: 0 }}>
+      <img src={video.thumbnail} alt={video.title} style={{ width: "112px", height: "63px", borderRadius: "5px", objectFit: "cover", flexShrink: 0 }} />
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: "13px", fontWeight: 500, color: "var(--color-text-primary)", lineHeight: "1.45", marginBottom: "5px", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{video.title}</div>
+        <div style={{ fontSize: "11px", color: "var(--color-text-tertiary)" }}>{video.channel}</div>
+        <div style={{ fontSize: "11px", color: "var(--color-text-tertiary)", marginTop: "2px" }}>{fmt(video.views)} views</div>
+      </div>
+    </a>
+  );
+}
+
 const Btn = ({ label, onClick, primary = true, disabled = false }) => (
   <button onClick={onClick} disabled={disabled} style={{ padding: "10px 22px", background: primary && !disabled ? "#00693e" : "transparent", color: primary && !disabled ? "white" : "var(--color-text-secondary)", border: primary ? "none" : "0.5px solid var(--color-border-secondary)", borderRadius: "var(--border-radius-md)", fontSize: "14px", fontWeight: primary ? 600 : 400, cursor: disabled ? "default" : "pointer", opacity: disabled ? 0.5 : 1 }}>
     {label}
@@ -427,6 +469,7 @@ export default function App() {
   const [answers, setAnswers] = useState({});
   const [results, setResults] = useState(null);
   const [followUpSections, setFollowUpSections] = useState([]);
+  const [videos, setVideos] = useState([]);
   const [chatHistory, setChatHistory] = useState([]);
   const [loading, setLoading] = useState(false);
   const [loadMsg, setLoadMsg] = useState("");
@@ -457,18 +500,22 @@ Return JSON with exactly this structure — sections array only, no other keys:
 
 IMPORTANT: prose must be real paragraph text, not placeholder instructions. keyItems: 2-3 per section, only for sections with formulas or tricky terms, else use [].`;
 
-    const r1 = await askJSON([{ role: "user", content: sectionPrompt([
-      ["intro", "What this is and why it matters", "Start with a real-world problem this topic solves. Explain the concept in plain English before any notation. Use analogy if helpful."],
-      ["mechanics", "How it actually works", "Build up mechanics step by step. Introduce notation after intuition is clear. Explain what each symbol means and where it comes from."],
-    ]) }]);
-    const r2 = await askJSON([{ role: "user", content: sectionPrompt([
-      ["example", "A concrete worked example", "Walk through a full numerical example step by step. Explain what you are doing AND why at each stage — not just algebra."],
-      ["pitfalls", "Where people get confused", "Describe 2-3 specific misconceptions. Explain why each happens and give the correct mental model. Be direct and specific."],
-    ]) }]);
+    const [r1, r2, ytVideos] = await Promise.all([
+      askJSON([{ role: "user", content: sectionPrompt([
+        ["intro", "What this is and why it matters", "Start with a real-world problem this topic solves. Explain the concept in plain English before any notation. Use analogy if helpful."],
+        ["mechanics", "How it actually works", "Build up mechanics step by step. Introduce notation after intuition is clear. Explain what each symbol means and where it comes from."],
+      ]) }]),
+      askJSON([{ role: "user", content: sectionPrompt([
+        ["example", "A concrete worked example", "Walk through a full numerical example step by step. Explain what you are doing AND why at each stage — not just algebra."],
+        ["pitfalls", "Where people get confused", "Describe 2-3 specific misconceptions. Explain why each happens and give the correct mental model. Be direct and specific."],
+      ]) }]),
+      fetchYouTubeVideos(topic).catch(() => []),
+    ]);
 
     const s1 = parseJSON(r1).sections || [];
     const s2 = parseJSON(r2).sections || [];
     setSections([...s1, ...s2]);
+    setVideos(ytVideos);
     setPhase("learn");
   }, "Building your lesson…");
 
@@ -523,7 +570,7 @@ Return JSON for a single re-instruction section:
 
   const reset = () => {
     setPhase("topic"); setTopic(""); setSections([]); setQuestions([]);
-    setAnswers({}); setResults(null); setFollowUpSections([]); setChatHistory([]); setError("");
+    setAnswers({}); setResults(null); setFollowUpSections([]); setVideos([]); setChatHistory([]); setError("");
   };
 
   const pct = results ? Math.round((results.score / results.total) * 100) : 0;
@@ -590,6 +637,14 @@ Return JSON for a single re-instruction section:
               </div>
             ))}
           </div>
+          {videos.length > 0 && (
+            <div style={{ marginTop: "1.25rem" }}>
+              <p style={{ fontSize: "11px", fontWeight: 700, letterSpacing: "0.08em", color: "var(--color-text-tertiary)", textTransform: "uppercase", margin: "0 0 0.6rem" }}>Recommended Videos</p>
+              <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+                {videos.map(v => <VideoCard key={v.id} video={v} />)}
+              </div>
+            </div>
+          )}
           <ChatPanel {...chatProps} />
           <div style={{ display: "flex", justifyContent: "space-between", marginTop: "1.25rem" }}>
             <Btn label="← Change Topic" onClick={() => setPhase("topic")} primary={false} />
