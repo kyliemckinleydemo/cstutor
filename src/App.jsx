@@ -541,22 +541,32 @@ function VideoCard({ video }) {
   );
 }
 
-function NavBar({ view, setView, sessionCount, formulaCount, dueCount }) {
+function TopNav({ view, setView, onHome, sessionCount, formulaCount, dueCount }) {
   const tabs = [
     { id: "session", label: "New Session" },
     { id: "history", label: `History${sessionCount ? ` (${sessionCount})` : ""}` },
-    { id: "formulas", label: `Formulas/Definitions${formulaCount ? ` (${formulaCount})` : ""}` },
-    { id: "review", label: `Review${dueCount ? ` (${dueCount} due)` : ""}`, urgent: dueCount > 0 },
+    { id: "formulas", label: `Formulas/Defs${formulaCount ? ` (${formulaCount})` : ""}` },
+    { id: "review", label: `Review${dueCount ? ` (${dueCount})` : ""}`, urgent: dueCount > 0 },
+    { id: "help", label: "?" },
   ];
   return (
-    <div style={{ display: "flex", gap: "6px", marginBottom: "1.75rem", flexWrap: "wrap", alignItems: "center" }}>
-      {tabs.map(t => (
-        <button key={t.id} onClick={() => setView(t.id)}
-          style={{ padding: "6px 14px", fontSize: "12px", fontWeight: 600, borderRadius: "20px", border: view === t.id ? "none" : "0.5px solid var(--color-border-tertiary)", background: view === t.id ? "#00693e" : "var(--color-background-secondary)", color: view === t.id ? "white" : t.urgent ? "#a32d2d" : "var(--color-text-secondary)", cursor: "pointer" }}>
-          {t.label}
+    <div style={{ position: "sticky", top: 0, zIndex: 20, background: "var(--color-background-primary,#fff)", borderBottom: "0.5px solid var(--color-border-tertiary)", marginBottom: "1.5rem", marginLeft: "-1.5rem", marginRight: "-1.5rem", padding: "0 1.5rem" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "12px", height: "52px" }}>
+        <button onClick={onHome} style={{ display: "flex", alignItems: "center", gap: "7px", background: "none", border: "none", cursor: "pointer", padding: 0, flexShrink: 0 }}>
+          <div style={{ width: "7px", height: "7px", borderRadius: "50%", background: "#00693e", flexShrink: 0 }} />
+          <span style={{ fontSize: "14px", fontWeight: 700, color: "var(--color-text-primary)", letterSpacing: "-0.01em" }}>{COURSE_TITLE}</span>
+          <span style={{ fontSize: "11px", color: "var(--color-text-tertiary)", fontWeight: 500 }}>{COURSE_LABEL}</span>
         </button>
-      ))}
-      <button onClick={() => setView("help")} style={{ marginLeft: "auto", width: "28px", height: "28px", borderRadius: "50%", border: view === "help" ? "none" : "0.5px solid var(--color-border-tertiary)", background: view === "help" ? "#00693e" : "var(--color-background-secondary)", color: view === "help" ? "white" : "var(--color-text-tertiary)", fontSize: "13px", fontWeight: 700, cursor: "pointer", flexShrink: 0 }}>?</button>
+        <div style={{ flex: 1 }} />
+        <div style={{ display: "flex", gap: "4px", alignItems: "center" }}>
+          {tabs.map(t => (
+            <button key={t.id} onClick={() => setView(t.id)}
+              style={{ padding: t.id === "help" ? "4px 9px" : "5px 12px", fontSize: "12px", fontWeight: 600, borderRadius: "20px", border: view === t.id ? "none" : "0.5px solid var(--color-border-tertiary)", background: view === t.id ? "#00693e" : "transparent", color: view === t.id ? "white" : t.urgent ? "#a32d2d" : "var(--color-text-secondary)", cursor: "pointer", whiteSpace: "nowrap" }}>
+              {t.label}
+            </button>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
@@ -981,20 +991,10 @@ Return JSON for a single re-instruction section:
   const followUpText = followUpSections.map(s => s.prose || "").join(" ");
   const chatProps = { topic, sections, questions, answers, results, followUpText, phase, history: chatHistory, setHistory: setChatHistory };
   const dueCount = flagged.filter(f => f.dueDate <= today()).length;
-  const showNav = view !== "session" || phase === "topic";
 
   return (
-    <div style={{ maxWidth: "720px", margin: "0 auto", padding: "2rem 1.5rem", fontFamily: "var(--font-sans,system-ui)", color: "var(--color-text-primary)" }}>
-      <div style={{ marginBottom: "1.25rem" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
-          <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#00693e" }} />
-          <span style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.12em", color: "#00693e", textTransform: "uppercase" }}>{COURSE_LABEL}</span>
-        </div>
-        <h1 onClick={reset} style={{ fontSize: "26px", fontWeight: 700, margin: 0, letterSpacing: "-0.02em", cursor: (view !== "session" || phase !== "topic") ? "pointer" : "default" }}>{COURSE_TITLE}</h1>
-        <p style={{ fontSize: "13px", color: "var(--color-text-secondary)", margin: "4px 0 0" }}>{COURSE_SUBTITLE}</p>
-      </div>
-
-      {showNav && <NavBar view={view} setView={setView} sessionCount={sessions.length} formulaCount={formulas.length} dueCount={dueCount} />}
+    <div style={{ maxWidth: "720px", margin: "0 auto", padding: "0 1.5rem 2rem", fontFamily: "var(--font-sans,system-ui)", color: "var(--color-text-primary)" }}>
+      <TopNav view={view} setView={setView} onHome={reset} sessionCount={sessions.length} formulaCount={formulas.length} dueCount={dueCount} />
       {view === "history" && <HistoryView sessions={sessions} />}
       {view === "formulas" && <FormulasView formulas={formulas} setFormulas={setFormulas} />}
       {view === "review" && <ReviewView flagged={flagged} setFlagged={setFlagged} onDone={() => setView("session")} />}
@@ -1040,7 +1040,15 @@ Return JSON for a single re-instruction section:
           <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: "var(--border-radius-lg)", padding: "1.75rem 2rem", marginBottom: "1.25rem" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "1.75rem", paddingBottom: "1.25rem", borderBottom: "0.5px solid var(--color-border-tertiary)" }}>
               <span style={{ padding: "3px 10px", background: "#e6f3ed", borderRadius: "var(--border-radius-md)", fontSize: "11px", fontWeight: 700, color: "#00693e", letterSpacing: "0.05em", textTransform: "uppercase" }}>Lesson</span>
-              <span style={{ fontSize: "16px", fontWeight: 600 }}>{topic}</span>
+              <span style={{ fontSize: "16px", fontWeight: 600, flex: 1 }}>{topic}</span>
+              {!confirmRegen
+                ? <button onClick={() => setConfirmRegen(true)} style={{ padding: "4px 11px", fontSize: "11px", fontWeight: 600, background: "none", border: "0.5px solid var(--color-border-tertiary)", borderRadius: "var(--border-radius-md)", color: "var(--color-text-tertiary)", cursor: "pointer", flexShrink: 0 }}>↺ Regen</button>
+                : <div style={{ display: "flex", gap: "6px", alignItems: "center", padding: "4px 8px", background: "var(--color-background-secondary)", border: "0.5px solid var(--color-border-secondary)", borderRadius: "var(--border-radius-md)", fontSize: "12px", color: "var(--color-text-secondary)" }}>
+                    <span>Regenerate for <strong>{topic}</strong>? History &amp; formulas kept.</span>
+                    <button onClick={doRegen} style={{ padding: "2px 9px", fontSize: "12px", fontWeight: 600, background: "#00693e", color: "white", border: "none", borderRadius: "var(--border-radius-md)", cursor: "pointer" }}>Yes</button>
+                    <button onClick={() => setConfirmRegen(false)} style={{ padding: "2px 6px", fontSize: "12px", background: "none", border: "none", cursor: "pointer", color: "var(--color-text-tertiary)" }}>Cancel</button>
+                  </div>
+              }
             </div>
             {sections.map((sec, i) => (
               <div key={sec.id || i}>
@@ -1058,18 +1066,8 @@ Return JSON for a single re-instruction section:
             </div>
           )}
           <ChatPanel {...chatProps} />
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginTop: "1.25rem", gap: "10px", flexWrap: "wrap" }}>
-            <div style={{ display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap" }}>
-              <Btn label="← Change Topic" onClick={() => { setConfirmRegen(false); setPhase("topic"); }} primary={false} />
-              {!confirmRegen
-                ? <button onClick={() => setConfirmRegen(true)} style={{ padding: "8px 14px", fontSize: "13px", fontWeight: 500, background: "none", border: "0.5px solid var(--color-border-secondary)", borderRadius: "var(--border-radius-md)", color: "var(--color-text-tertiary)", cursor: "pointer" }}>↺ Regen</button>
-                : <div style={{ display: "flex", gap: "6px", alignItems: "center", padding: "6px 10px", background: "var(--color-background-secondary)", border: "0.5px solid var(--color-border-secondary)", borderRadius: "var(--border-radius-md)", fontSize: "12px", color: "var(--color-text-secondary)" }}>
-                    <span>Regenerate lesson &amp; quiz for <strong>{topic}</strong>? Your history &amp; formulas are kept.</span>
-                    <button onClick={doRegen} style={{ padding: "3px 10px", fontSize: "12px", fontWeight: 600, background: "#00693e", color: "white", border: "none", borderRadius: "var(--border-radius-md)", cursor: "pointer" }}>Yes</button>
-                    <button onClick={() => setConfirmRegen(false)} style={{ padding: "3px 8px", fontSize: "12px", background: "none", border: "none", cursor: "pointer", color: "var(--color-text-tertiary)" }}>Cancel</button>
-                  </div>
-              }
-            </div>
+          <div style={{ display: "flex", justifyContent: "space-between", marginTop: "1.25rem" }}>
+            <Btn label="← Change Topic" onClick={() => { setConfirmRegen(false); setPhase("topic"); }} primary={false} />
             <Btn label="Ready — Take Quiz →" onClick={doQuiz} />
           </div>
         </div>
