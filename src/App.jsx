@@ -255,6 +255,14 @@ function CodeSnippet({ section, topic }) {
   const [open, setOpen] = useState(false);
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const copyCode = () => {
+    navigator.clipboard.writeText(code).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    });
+  };
 
   const load = async () => {
     if (code) { setOpen(o => !o); return; }
@@ -288,7 +296,12 @@ Return ONLY the code block, no prose before or after.`
         <div style={{ marginTop: "6px", borderRadius: "var(--border-radius-md)", background: "#1e1e1e", overflow: "hidden" }}>
           {loading
             ? <div style={{ padding: "1rem", display: "flex", alignItems: "center", gap: "10px" }}><LoadDots /><span style={{ fontSize: "12px", color: "#888" }}>Generating example…</span></div>
-            : <pre style={{ margin: 0, padding: "1rem 1.25rem", fontSize: "12.5px", lineHeight: "1.65", color: "#d4d4d4", fontFamily: "var(--font-mono,monospace)", overflowX: "auto", whiteSpace: "pre" }}>{code}</pre>}
+            : <>
+                <div style={{ display: "flex", justifyContent: "flex-end", padding: "4px 8px 0" }}>
+                  <button onClick={copyCode} style={{ background: "none", border: "0.5px solid #444", borderRadius: "4px", color: copied ? "#a8d8a8" : "#888", fontSize: "11px", padding: "2px 9px", cursor: "pointer" }}>{copied ? "Copied!" : "Copy"}</button>
+                </div>
+                <pre style={{ margin: 0, padding: "0.5rem 1.25rem 1rem", fontSize: "12.5px", lineHeight: "1.65", color: "#d4d4d4", fontFamily: "var(--font-mono,monospace)", overflowX: "auto", whiteSpace: "pre" }}>{code}</pre>
+              </>}
         </div>
       )}
     </div>
@@ -753,20 +766,21 @@ export default function App() {
   useEffect(() => stor.set(`cstutor_${COURSE.id}_formulas`, formulas), [formulas]);
   useEffect(() => stor.set(`cstutor_${COURSE.id}_flagged`, flagged), [flagged]);
 
-  // Restore in-progress session on mount
+  // Restore session on mount (including completed lessons)
   useEffect(() => {
     const s = stor.get(`cstutor_${COURSE.id}_current`, null);
-    if (s?.phase && s.phase !== "topic" && s.phase !== "done") {
+    if (s?.phase && s.phase !== "topic") {
       setTopic(s.topic || ""); setSections(s.sections || []); setQuestions(s.questions || []);
       setAnswers(s.answers || {}); setResults(s.results || null);
       setFollowUpSections(s.followUpSections || []); setVideos(s.videos || []);
       setPhase(s.phase);
+      if (s.phase === "done") sessionSavedRef.current = true;
     }
   }, []);
 
-  // Save in-progress session on state changes
+  // Save session on state changes (all phases except home screen)
   useEffect(() => {
-    if (phase === "topic" || phase === "done") { stor.set(`cstutor_${COURSE.id}_current`, null); return; }
+    if (phase === "topic") { stor.set(`cstutor_${COURSE.id}_current`, null); return; }
     stor.set(`cstutor_${COURSE.id}_current`, { topic, sections, questions, answers, results, followUpSections, videos, phase });
   }, [phase, answers]);
 
@@ -775,7 +789,6 @@ export default function App() {
     if (phase === "done" && results && !sessionSavedRef.current) {
       sessionSavedRef.current = true;
       setSessions(prev => [{ id: Date.now(), topic, date: today(), score: results.score, total: results.total, weakAreas: results.weakAreas || [], strongAreas: results.strongAreas || [] }, ...prev]);
-      stor.set(`cstutor_${COURSE.id}_current`, null);
     }
   }, [phase]);
 
@@ -897,6 +910,7 @@ Return JSON for a single re-instruction section:
 
   const reset = () => {
     sessionSavedRef.current = false;
+    stor.set(`cstutor_${COURSE.id}_current`, null);
     setView("session"); setPhase("topic"); setTopic(""); setSections([]); setQuestions([]);
     setAnswers({}); setResults(null); setFollowUpSections([]); setVideos([]); setChatHistory([]); setError("");
   };
