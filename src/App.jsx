@@ -663,6 +663,20 @@ function ReviewView({ flagged, setFlagged, onDone }) {
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
+  const [genQ, setGenQ] = useState(null);
+  const [genLoading, setGenLoading] = useState(false);
+
+  const ref = due[idx];
+
+  useEffect(() => {
+    if (!ref) return;
+    setGenQ(null); setAnswer(""); setResult(null);
+    setGenLoading(true);
+    askJSON([{ role: "user", content: `The student previously struggled with this question on "${ref.topic}":\n\nOriginal question: ${ref.question}\nFeedback they received: ${ref.feedback || "none"}\n\nGenerate a fresh question that tests the same concept from a different angle. It should be ${ref.difficulty || "medium"} difficulty and ${ref.type || "conceptual"} type.\n\nReturn JSON only:\n{"question":"..."}` }])
+      .then(raw => setGenQ(parseJSON(raw)?.question || ref.question))
+      .catch(() => setGenQ(ref.question))
+      .finally(() => setGenLoading(false));
+  }, [idx, ref?.topic, ref?.question]);
 
   if (!due.length || done) return (
     <div style={{ textAlign: "center", padding: "3rem 1rem" }}>
@@ -675,13 +689,13 @@ function ReviewView({ flagged, setFlagged, onDone }) {
     </div>
   );
 
-  const q = due[idx];
+  const q = ref;
 
   const grade = async () => {
-    if (!answer.trim() || loading) return;
+    if (!answer.trim() || loading || !genQ) return;
     setLoading(true);
     try {
-      const raw = await askJSON([{ role: "user", content: `Grade this answer on "${q.topic}":\n\nQuestion: ${q.question}\nAnswer: ${answer}\n\n1=correct, 0.5=partial, 0=wrong. Return JSON:\n{"score":0,"feedback":"2 specific sentences"}` }]);
+      const raw = await askJSON([{ role: "user", content: `Grade this answer on "${q.topic}":\n\nQuestion: ${genQ}\nAnswer: ${answer}\n\n1=correct, 0.5=partial, 0=wrong. Return JSON:\n{"score":0,"feedback":"2 specific sentences"}` }]);
       const parsed = parseJSON(raw);
       setResult(parsed);
       const d = new Date();
@@ -689,13 +703,13 @@ function ReviewView({ flagged, setFlagged, onDone }) {
       else if (parsed.score === 0.5) d.setDate(d.getDate() + 3);
       else d.setDate(d.getDate() + 1);
       const newDate = d.toISOString().split("T")[0];
-      setFlagged(prev => prev.map(f => (f.topic === q.topic && f.question === q.question) ? { ...f, dueDate: newDate } : f));
+      setFlagged(prev => prev.map(f => (f.topic === q.topic && f.question === q.question) ? { ...f, dueDate: newDate, feedback: parsed.feedback } : f));
     } catch { setResult({ score: 0, feedback: "Could not grade — please try again." }); }
     setLoading(false);
   };
 
   const next = () => {
-    setAnswer(""); setResult(null);
+    setAnswer(""); setResult(null); setGenQ(null);
     if (idx + 1 >= due.length) setDone(true);
     else setIdx(i => i + 1);
   };
@@ -705,7 +719,9 @@ function ReviewView({ flagged, setFlagged, onDone }) {
       <div style={{ fontSize: "12px", color: "var(--color-text-tertiary)", marginBottom: "1rem" }}>Question {idx + 1} of {due.length}</div>
       <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: "var(--border-radius-lg)", padding: "1.25rem 1.5rem" }}>
         <div style={{ fontSize: "11px", fontWeight: 700, color: "#00693e", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "8px" }}>{q.topic}</div>
-        <p style={{ margin: "0 0 1rem", fontSize: "14px", fontWeight: 500, lineHeight: "1.75" }}>{q.question}</p>
+        {genLoading
+          ? <div style={{ display: "flex", alignItems: "center", gap: "10px", margin: "0 0 1rem" }}><LoadDots /><span style={{ fontSize: "13px", color: "var(--color-text-tertiary)" }}>Generating question…</span></div>
+          : <p style={{ margin: "0 0 1rem", fontSize: "14px", fontWeight: 500, lineHeight: "1.75" }}>{genQ}</p>}
         {!result ? (
           <>
             <textarea value={answer} onChange={e => setAnswer(e.target.value)} onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); grade(); } }}
