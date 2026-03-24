@@ -3,26 +3,75 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>COSC 77 Study Tutor</title>
+    <title>Tutor Agent</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
     <style>
       *, *::before, *::after { box-sizing: border-box; }
+
+      :root {
+        /* Brand palette */
+        --pine:        #1a3a2a;
+        --pine-mid:    #2d5a40;
+        --pine-light:  #3d7a58;
+        --sage:        #5c8f6e;
+        --mint:        #a8d5b5;
+        --cream:       #f5f2eb;
+        --cream-dark:  #ede9df;
+        --warm-white:  #faf8f3;
+        --gold:        #c8a84b;
+        --gold-light:  #e2c97e;
+        --text-dark:   #1c2b22;
+        --text-mid:    #3e5548;
+        --text-muted:  #7a9485;
+        --border:      #d6cfc0;
+
+        /* Legacy aliases used throughout App.jsx */
+        --font-sans: 'DM Sans', system-ui, sans-serif;
+        --font-mono: 'DM Mono', ui-monospace, monospace;
+        --color-text-primary:        var(--text-dark);
+        --color-text-secondary:      var(--text-mid);
+        --color-text-tertiary:       var(--text-muted);
+        --color-text-danger:         #a32d2d;
+        --color-background-primary:  #ffffff;
+        --color-background-secondary: var(--cream);
+        --color-background-danger:   #fff5f5;
+        --color-border-secondary:    var(--border);
+        --color-border-tertiary:     #e2ddd4;
+        --color-border-danger:       #f5c0c0;
+        --border-radius-md:          8px;
+        --border-radius-lg:          12px;
+      }
+
       body {
         margin: 0;
-        background: #f9f9f8;
-        --font-sans: system-ui, -apple-system, sans-serif;
-        --font-mono: ui-monospace, monospace;
-        --color-text-primary: #1a1a1a;
-        --color-text-secondary: #555;
-        --color-text-tertiary: #888;
-        --color-text-danger: #a32d2d;
-        --color-background-primary: #ffffff;
-        --color-background-secondary: #f4f4f2;
-        --color-background-danger: #fff5f5;
-        --color-border-secondary: #d8d8d4;
-        --color-border-tertiary: #e8e8e4;
-        --color-border-danger: #f5c0c0;
-        --border-radius-md: 8px;
-        --border-radius-lg: 12px;
+        background: var(--warm-white);
+        color: var(--text-dark);
+        font-family: var(--font-sans);
+        min-height: 100vh;
+        overflow-x: hidden;
+      }
+
+      /* Subtle noise texture overlay */
+      body::before {
+        content: '';
+        position: fixed; inset: 0;
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.028'/%3E%3C/svg%3E");
+        pointer-events: none; z-index: 0;
+      }
+
+      @keyframes fadeUp {
+        from { opacity: 0; transform: translateY(16px); }
+        to   { opacity: 1; transform: translateY(0); }
+      }
+      @keyframes chipIn {
+        from { opacity: 0; transform: translateY(10px) scale(0.95); }
+        to   { opacity: 1; transform: translateY(0) scale(1); }
+      }
+      @keyframes pls {
+        0%,100% { opacity:.2; transform:scale(.75); }
+        50%      { opacity:1;  transform:scale(1); }
       }
     </style>
   </head>

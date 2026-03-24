@@ -167,9 +167,8 @@ function LoadDots() {
   return (
     <div style={{ display: "flex", gap: "5px", alignItems: "center" }}>
       {[0, 1, 2].map(i => (
-        <div key={i} style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#00693e", animation: `pls 1s ease-in-out ${i * 0.18}s infinite` }} />
+        <div key={i} style={{ width: "6px", height: "6px", borderRadius: "50%", background: "var(--pine)", animation: `pls 1s ease-in-out ${i * 0.18}s infinite` }} />
       ))}
-      <style>{`@keyframes pls{0%,100%{opacity:.2;transform:scale(.75)}50%{opacity:1;transform:scale(1)}}`}</style>
     </div>
   );
 }
@@ -180,18 +179,27 @@ const PIDX = { topic: 0, learn: 1, quiz: 2, grade: 3, followup: 4, done: 5 };
 function PhaseBar({ phase }) {
   const cur = PIDX[phase];
   return (
-    <div style={{ display: "flex", alignItems: "flex-start", marginBottom: "2rem" }}>
-      {PHASES.map((label, i) => (
-        <div key={i} style={{ display: "flex", alignItems: "flex-start", flex: i < 5 ? "1 1 0" : "0 0 auto" }}>
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", flexShrink: 0 }}>
-            <div style={{ width: "22px", height: "22px", borderRadius: "50%", background: i <= cur ? "#00693e" : "var(--color-background-secondary)", border: i <= cur ? "2px solid #00693e" : "1.5px solid var(--color-border-secondary)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "10px", fontWeight: 700, color: i <= cur ? "white" : "var(--color-text-tertiary)", transition: "all 0.3s" }}>
+    <div style={{ background: "var(--cream)", borderBottom: "1px solid var(--border)", padding: "20px 2.5rem 16px", position: "relative", zIndex: 1 }}>
+      <div style={{ display: "flex", alignItems: "flex-start", maxWidth: "900px", margin: "0 auto", position: "relative" }}>
+        <div style={{ position: "absolute", top: "17px", left: "18px", right: "18px", height: "1px", background: "var(--border)", zIndex: 0 }} />
+        {PHASES.map((label, i) => (
+          <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "8px", position: "relative", zIndex: 1 }}>
+            <div style={{
+              width: "36px", height: "36px", borderRadius: "50%",
+              background: i <= cur ? "var(--pine)" : "var(--warm-white)",
+              border: `2px solid ${i <= cur ? "var(--pine)" : "var(--border)"}`,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontFamily: "'DM Mono', monospace", fontSize: "0.8rem", fontWeight: 500,
+              color: i < cur ? "#fff" : i === cur ? "var(--gold)" : "var(--text-muted)",
+              transition: "all 0.25s",
+              boxShadow: i === cur ? "0 0 0 4px rgba(26,58,42,0.1)" : "none",
+            }}>
               {i < cur ? "✓" : i + 1}
             </div>
-            <span style={{ fontSize: "10px", marginTop: "4px", color: i === cur ? "#00693e" : "var(--color-text-tertiary)", fontWeight: i === cur ? 600 : 400, whiteSpace: "nowrap" }}>{label}</span>
+            <span style={{ fontSize: "0.72rem", fontWeight: i === cur ? 600 : 500, color: i === cur ? "var(--pine)" : "var(--text-muted)", letterSpacing: "0.03em", textAlign: "center" }}>{label}</span>
           </div>
-          {i < 5 && <div style={{ flex: 1, height: "1.5px", background: i < cur ? "#00693e" : "var(--color-border-tertiary)", marginTop: "10px", transition: "background 0.3s" }} />}
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
   );
 }
@@ -236,7 +244,7 @@ Be thorough. Assume nothing except basic algebra.`
           <code style={{ fontFamily: "var(--font-mono,monospace)", fontSize: "13px", background: "rgba(0,105,62,0.09)", color: "#004d2e", padding: "3px 9px", borderRadius: "4px", fontWeight: 600, whiteSpace: "nowrap", flexShrink: 0 }}>{item.label}</code>
           <span style={{ fontSize: "13px", color: "var(--color-text-secondary)", lineHeight: "1.5" }}>{item.context}</span>
         </div>
-        <span style={{ fontSize: "11px", fontWeight: 600, color: open ? "#ba7517" : "#00693e", whiteSpace: "nowrap", background: open ? "#faeeda" : "#e6f3ed", padding: "3px 9px", borderRadius: "var(--border-radius-md)", flexShrink: 0 }}>
+        <span style={{ fontSize: "11px", fontWeight: 600, color: open ? "#ba7517" : "var(--pine)", whiteSpace: "nowrap", background: open ? "#faeeda" : "rgba(26,58,42,0.09)", padding: "3px 9px", borderRadius: "var(--border-radius-md)", flexShrink: 0 }}>
           {loading ? "loading…" : open ? "close ×" : "explain →"}
         </span>
       </button>
@@ -312,7 +320,7 @@ function LessonSection({ section, topic }) {
   return (
     <div style={{ marginBottom: "2rem" }}>
       <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "1.1rem" }}>
-        <div style={{ width: "4px", height: "22px", background: "#00693e", borderRadius: "2px", flexShrink: 0 }} />
+        <div style={{ width: "4px", height: "22px", background: "var(--pine)", borderRadius: "2px", flexShrink: 0 }} />
         <h3 style={{ margin: 0, fontSize: "17px", fontWeight: 600, color: "var(--color-text-primary)", letterSpacing: "-0.01em" }}>{section.title}</h3>
       </div>
       <ProseParagraphs text={section.prose} />
@@ -385,8 +393,8 @@ Write in flowing paragraphs, no bullet points. Be thorough — this is a teachin
   };
 
   const scoreLabel = score === 1 ? "see why this is correct" : score === 0.5 ? "see full answer" : "see correct answer";
-  const accentColor = score === 1 ? "#00693e" : score === 0.5 ? "#ba7517" : "#a32d2d";
-  const accentBg = score === 1 ? "#e6f3ed" : score === 0.5 ? "#faeeda" : "#fcebeb";
+  const accentColor = score === 1 ? "var(--pine)" : score === 0.5 ? "#ba7517" : "#a32d2d";
+  const accentBg = score === 1 ? "rgba(26,58,42,0.09)" : score === 0.5 ? "#faeeda" : "#fcebeb";
 
   return (
     <div style={{ marginTop: "10px", marginLeft: "36px", borderRadius: "var(--border-radius-md)", border: "0.5px solid var(--color-border-tertiary)", overflow: "hidden", background: open ? "var(--color-background-secondary)" : "transparent" }}>
@@ -455,8 +463,8 @@ function ChatPanel({ topic, sections, questions, answers, results, followUpText,
     <div style={{ marginTop: "1.5rem", borderRadius: "var(--border-radius-lg)", border: "0.5px solid var(--color-border-tertiary)", background: "var(--color-background-primary)", overflow: "hidden" }}>
       <button onClick={() => setOpen(o => !o)} style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.85rem 1.25rem", background: "none", border: "none", cursor: "pointer" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-          <div style={{ width: "26px", height: "26px", borderRadius: "50%", background: "#e6f3ed", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M8 1C4.13 1 1 3.91 1 7.5c0 1.61.62 3.08 1.65 4.22L2 14l2.58-.87C5.55 13.68 6.75 14 8 14c3.87 0 7-2.91 7-6.5S11.87 1 8 1z" fill="#00693e" /></svg>
+          <div style={{ width: "26px", height: "26px", borderRadius: "50%", background: "rgba(26,58,42,0.09)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M8 1C4.13 1 1 3.91 1 7.5c0 1.61.62 3.08 1.65 4.22L2 14l2.58-.87C5.55 13.68 6.75 14 8 14c3.87 0 7-2.91 7-6.5S11.87 1 8 1z" fill="var(--pine)" /></svg>
           </div>
           <div style={{ textAlign: "left" }}>
             <div style={{ fontSize: "13px", fontWeight: 600, color: "var(--color-text-primary)" }}>Ask a question</div>
@@ -483,12 +491,12 @@ function ChatPanel({ topic, sections, questions, answers, results, followUpText,
             <div style={{ maxHeight: "360px", overflowY: "auto", padding: "1rem 1.25rem", display: "flex", flexDirection: "column", gap: "14px" }}>
               {history.map((m, i) => (
                 <div key={i} style={{ display: "flex", gap: "10px", flexDirection: m.from === "user" ? "row-reverse" : "row" }}>
-                  <div style={{ width: "24px", height: "24px", borderRadius: "50%", flexShrink: 0, marginTop: "1px", background: m.from === "user" ? "#e6f3ed" : "var(--color-background-secondary)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    <span style={{ fontSize: "9px", fontWeight: 700, color: m.from === "user" ? "#00693e" : "var(--color-text-tertiary)" }}>{m.from === "user" ? initials : "AI"}</span>
+                  <div style={{ width: "24px", height: "24px", borderRadius: "50%", flexShrink: 0, marginTop: "1px", background: m.from === "user" ? "rgba(26,58,42,0.09)" : "var(--color-background-secondary)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <span style={{ fontSize: "9px", fontWeight: 700, color: m.from === "user" ? "var(--pine)" : "var(--color-text-tertiary)" }}>{m.from === "user" ? initials : "AI"}</span>
                   </div>
                   <div style={{ flex: 1, maxWidth: "88%" }}>
                     <div style={{ fontSize: "11px", color: "var(--color-text-tertiary)", marginBottom: "3px", textAlign: m.from === "user" ? "right" : "left" }}>{m.from === "user" ? displayName : "Tutor"}</div>
-                    <div style={{ background: m.from === "user" ? "#e6f3ed" : "var(--color-background-secondary)", borderRadius: m.from === "user" ? "12px 12px 2px 12px" : "12px 12px 12px 2px", padding: "10px 14px" }}>
+                    <div style={{ background: m.from === "user" ? "rgba(26,58,42,0.09)" : "var(--color-background-secondary)", borderRadius: m.from === "user" ? "12px 12px 2px 12px" : "12px 12px 12px 2px", padding: "10px 14px" }}>
                       <ProseParagraphs text={m.text} size="13px" />
                     </div>
                   </div>
@@ -515,7 +523,7 @@ function ChatPanel({ topic, sections, questions, answers, results, followUpText,
               style={{ flex: 1, padding: "9px 12px", fontSize: "13px", lineHeight: "1.5", borderRadius: "var(--border-radius-md)", border: "0.5px solid var(--color-border-secondary)", background: "var(--color-background-secondary)", color: "var(--color-text-primary)", resize: "none", fontFamily: "var(--font-sans,system-ui)", outline: "none", maxHeight: "90px" }}
             />
             <button onClick={send} disabled={!input.trim() || thinking}
-              style={{ padding: "9px 14px", background: input.trim() && !thinking ? "#00693e" : "var(--color-background-secondary)", color: input.trim() && !thinking ? "white" : "var(--color-text-tertiary)", border: "none", borderRadius: "var(--border-radius-md)", fontSize: "13px", fontWeight: 600, cursor: input.trim() && !thinking ? "pointer" : "default", flexShrink: 0 }}>
+              style={{ padding: "9px 14px", background: input.trim() && !thinking ? "var(--pine)" : "var(--color-background-secondary)", color: input.trim() && !thinking ? "white" : "var(--color-text-tertiary)", border: "none", borderRadius: "var(--border-radius-md)", fontSize: "13px", fontWeight: 600, cursor: input.trim() && !thinking ? "pointer" : "default", flexShrink: 0 }}>
               Send
             </button>
           </div>
@@ -525,8 +533,8 @@ function ChatPanel({ topic, sections, questions, answers, results, followUpText,
   );
 }
 
-const scoreColor = p => p >= 80 ? "#00693e" : p >= 60 ? "#ba7517" : "#a32d2d";
-const scoreBg = p => p >= 80 ? "#e6f3ed" : p >= 60 ? "#faeeda" : "#fcebeb";
+const scoreColor = p => p >= 80 ? "var(--pine)" : p >= 60 ? "#ba7517" : "#a32d2d";
+const scoreBg = p => p >= 80 ? "rgba(26,58,42,0.09)" : p >= 60 ? "#faeeda" : "#fcebeb";
 
 function VideoCard({ video }) {
   const fmt = n => n >= 1e6 ? (n / 1e6).toFixed(1) + "M" : n >= 1e3 ? Math.round(n / 1e3) + "K" : String(n);
@@ -544,47 +552,67 @@ function VideoCard({ video }) {
 }
 
 function TopNav({ view, setView, onHome, sessionCount, formulaCount, dueCount, user, onSignOut }) {
-  const tabs = [
-    { id: "session", label: "New Topic" },
+  const navLinks = [
     { id: "history", label: `History${sessionCount ? ` (${sessionCount})` : ""}` },
     { id: "formulas", label: `Formulas/Defs${formulaCount ? ` (${formulaCount})` : ""}` },
     { id: "review", label: `Review${dueCount ? ` (${dueCount})` : ""}`, urgent: dueCount > 0 },
     { id: "help", label: "?" },
   ];
   return (
-    <div style={{ position: "sticky", top: 0, zIndex: 20, background: "var(--color-background-primary,#fff)", borderBottom: "0.5px solid var(--color-border-tertiary)", marginBottom: "1.5rem", marginLeft: "-2rem", marginRight: "-2rem", padding: "0 2rem" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: "12px", height: "52px" }}>
-        <button onClick={onHome} style={{ display: "flex", alignItems: "center", gap: "8px", background: "none", border: "none", cursor: "pointer", padding: 0, flexShrink: 0 }}>
-          <div style={{ width: "34px", height: "34px", borderRadius: "50%", background: "#00693e", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-            <img src="https://communications.dartmouth.edu/sites/communications/files/2024-07/lone-pine-rev.png" alt="Dartmouth" style={{ width: "24px", height: "24px", objectFit: "contain" }} />
-          </div>
-          <span style={{ fontSize: "14px", fontWeight: 700, color: "var(--color-text-primary)", letterSpacing: "-0.01em" }}>{COURSE_TITLE}</span>
-          <span style={{ fontSize: "11px", color: "var(--color-text-tertiary)", fontWeight: 500 }}>{COURSE_LABEL}</span>
-        </button>
-        <div style={{ flex: 1 }} />
-        <div style={{ display: "flex", gap: "4px", alignItems: "center" }}>
-          {tabs.map(t => (
-            <button key={t.id} onClick={() => setView(t.id)}
-              style={{ padding: t.id === "help" ? "4px 9px" : "5px 12px", fontSize: "12px", fontWeight: 600, borderRadius: "20px", border: view === t.id ? "none" : "0.5px solid var(--color-border-tertiary)", background: view === t.id ? "#00693e" : "transparent", color: view === t.id ? "white" : t.urgent ? "#a32d2d" : "var(--color-text-secondary)", cursor: "pointer", whiteSpace: "nowrap" }}>
-              {t.label}
-            </button>
-          ))}
-          {user && (
-            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginLeft: "8px", paddingLeft: "8px", borderLeft: "0.5px solid var(--color-border-tertiary)" }}>
-              <span style={{ fontSize: "11px", color: "var(--color-text-tertiary)", maxWidth: "140px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{user.email}</span>
-              <button onClick={onSignOut} style={{ fontSize: "11px", padding: "3px 9px", borderRadius: "20px", border: "0.5px solid var(--color-border-tertiary)", background: "transparent", color: "var(--color-text-tertiary)", cursor: "pointer" }}>Sign out</button>
-            </div>
-          )}
+    <nav style={{
+      position: "sticky", top: 0, zIndex: 100,
+      background: "var(--pine)",
+      display: "flex", alignItems: "center", justifyContent: "space-between",
+      padding: "0 2.5rem", height: "64px",
+      boxShadow: "0 1px 0 rgba(255,255,255,0.06), 0 4px 24px rgba(0,0,0,0.25)",
+    }}>
+      {/* Brand */}
+      <button onClick={onHome} style={{ display: "flex", alignItems: "center", gap: "12px", background: "none", border: "none", cursor: "pointer", padding: 0, flexShrink: 0 }}>
+        <div style={{ width: "36px", height: "36px", borderRadius: "50%", background: "var(--gold)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+          <img src="https://communications.dartmouth.edu/sites/communications/files/2024-07/lone-pine-rev.png" alt="Dartmouth" style={{ width: "22px", height: "22px", objectFit: "contain", filter: "brightness(0)" }} />
         </div>
+        <div style={{ textAlign: "left" }}>
+          <div style={{ fontFamily: "'Playfair Display', serif", fontSize: "1.1rem", fontWeight: 600, color: "#fff", letterSpacing: "0.01em", lineHeight: 1.2 }}>{COURSE_TITLE}</div>
+          <div style={{ fontSize: "0.7rem", fontWeight: 500, color: "var(--mint)", letterSpacing: "0.06em", textTransform: "uppercase", opacity: 0.85 }}>{COURSE_LABEL}</div>
+        </div>
+      </button>
+
+      {/* Nav links */}
+      <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+        <button onClick={onHome}
+          style={{ fontSize: "0.83rem", fontWeight: 600, padding: "7px 18px", background: "var(--gold)", color: "var(--pine)", border: "none", borderRadius: "8px", cursor: "pointer", letterSpacing: "0.02em", boxShadow: "0 2px 8px rgba(200,168,75,0.35)", marginRight: "6px" }}>
+          + New Topic
+        </button>
+        {navLinks.map(t => (
+          <button key={t.id} onClick={() => setView(t.id)}
+            style={{
+              fontSize: "0.83rem", fontWeight: 500,
+              padding: t.id === "help" ? "6px 10px" : "6px 14px",
+              background: view === t.id ? "rgba(255,255,255,0.14)" : "transparent",
+              color: t.urgent ? "var(--gold-light)" : view === t.id ? "#fff" : "rgba(255,255,255,0.7)",
+              border: "none", borderRadius: "8px", cursor: "pointer", whiteSpace: "nowrap",
+            }}>
+            {t.label}
+          </button>
+        ))}
       </div>
-    </div>
+
+      {/* User */}
+      {user && (
+        <div style={{ display: "flex", alignItems: "center", gap: "16px", flexShrink: 0 }}>
+          <span style={{ fontSize: "0.78rem", color: "rgba(255,255,255,0.5)", maxWidth: "180px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{user.email}</span>
+          <div style={{ width: "1px", height: "28px", background: "rgba(255,255,255,0.12)" }} />
+          <button onClick={onSignOut} style={{ fontSize: "0.78rem", color: "rgba(255,255,255,0.45)", background: "none", border: "none", cursor: "pointer", padding: 0, transition: "color 0.15s" }}>Sign out</button>
+        </div>
+      )}
+    </nav>
   );
 }
 
 function HelpView() {
   const Section = ({ title, children }) => (
     <div style={{ marginBottom: "1.75rem" }}>
-      <div style={{ fontSize: "11px", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "#00693e", marginBottom: "0.75rem" }}>{title}</div>
+      <div style={{ fontSize: "11px", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--pine)", marginBottom: "0.75rem" }}>{title}</div>
       {children}
     </div>
   );
@@ -634,7 +662,7 @@ function HistoryView({ sessions }) {
               <div style={{ fontSize: "15px", fontWeight: 600, marginBottom: "2px" }}>{s.topic}</div>
               <div style={{ fontSize: "11px", color: "var(--color-text-tertiary)" }}>{s.date}</div>
               {s.weakAreas?.length > 0 && <div style={{ fontSize: "12px", color: "var(--color-text-secondary)", marginTop: "4px" }}>Struggled: {s.weakAreas.join(", ")}</div>}
-              {s.strongAreas?.length > 0 && <div style={{ fontSize: "12px", color: "#00693e", marginTop: "2px" }}>Strong: {s.strongAreas.join(", ")}</div>}
+              {s.strongAreas?.length > 0 && <div style={{ fontSize: "12px", color: "var(--pine)", marginTop: "2px" }}>Strong: {s.strongAreas.join(", ")}</div>}
             </div>
             <div style={{ textAlign: "center", flexShrink: 0 }}>
               <div style={{ fontSize: "24px", fontWeight: 800, color: scoreColor(pct), lineHeight: 1 }}>{pct}%</div>
@@ -708,7 +736,7 @@ function FormulasView({ formulas, setFormulas }) {
         </select>
         <button onClick={() => window.print()} style={{ padding: "5px 14px", fontSize: "12px", fontWeight: 600, borderRadius: "var(--border-radius-md)", border: "0.5px solid var(--color-border-secondary)", background: "var(--color-background-secondary)", color: "var(--color-text-secondary)", cursor: "pointer" }}>Print / Save PDF</button>
       </div>
-      <Section items={formulaItems} heading="Formulas & Expressions" color="#00693e" ftype="formulas" />
+      <Section items={formulaItems} heading="Formulas & Expressions" color="var(--pine)" ftype="formulas" />
       <Section items={definitionItems} heading="Definitions" color="#555" ftype="definitions" />
     </div>
   );
@@ -743,7 +771,7 @@ function ReviewView({ flagged, setFlagged, onDone }) {
       <div style={{ fontSize: "14px", color: "var(--color-text-secondary)", marginBottom: "1.5rem" }}>
         {done ? `You reviewed ${due.length} question${due.length !== 1 ? "s" : ""}.` : "Come back later when questions are due."}
       </div>
-      <button onClick={onDone} style={{ padding: "10px 22px", background: "#00693e", color: "white", border: "none", borderRadius: "var(--border-radius-md)", fontSize: "14px", fontWeight: 600, cursor: "pointer" }}>Back to Home</button>
+      <button onClick={onDone} style={{ padding: "10px 22px", background: "var(--pine)", color: "white", border: "none", borderRadius: "var(--border-radius-md)", fontSize: "14px", fontWeight: 600, cursor: "pointer" }}>Back to Home</button>
     </div>
   );
 
@@ -776,7 +804,7 @@ function ReviewView({ flagged, setFlagged, onDone }) {
     <div>
       <div style={{ fontSize: "12px", color: "var(--color-text-tertiary)", marginBottom: "1rem" }}>Question {idx + 1} of {due.length}</div>
       <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: "var(--border-radius-lg)", padding: "1.25rem 1.5rem" }}>
-        <div style={{ fontSize: "11px", fontWeight: 700, color: "#00693e", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "8px" }}>{q.topic}</div>
+        <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--pine)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "8px" }}>{q.topic}</div>
         {genLoading
           ? <div style={{ display: "flex", alignItems: "center", gap: "10px", margin: "0 0 1rem" }}><LoadDots /><span style={{ fontSize: "13px", color: "var(--color-text-tertiary)" }}>Generating question…</span></div>
           : <p style={{ margin: "0 0 1rem", fontSize: "14px", fontWeight: 500, lineHeight: "1.75" }}>{genQ}</p>}
@@ -786,19 +814,19 @@ function ReviewView({ flagged, setFlagged, onDone }) {
               placeholder="Your answer… (Enter to submit)"
               rows={3} style={{ width: "100%", boxSizing: "border-box", padding: "10px 12px", fontSize: "14px", lineHeight: "1.65", borderRadius: "var(--border-radius-md)", border: "0.5px solid var(--color-border-secondary)", background: "var(--color-background-secondary)", color: "var(--color-text-primary)", resize: "vertical", fontFamily: "var(--font-sans,system-ui)", outline: "none" }} />
             <div style={{ marginTop: "10px", display: "flex", justifyContent: "flex-end" }}>
-              <button onClick={grade} disabled={!answer.trim() || loading} style={{ padding: "9px 20px", background: answer.trim() && !loading ? "#00693e" : "var(--color-background-secondary)", color: answer.trim() && !loading ? "white" : "var(--color-text-tertiary)", border: "none", borderRadius: "var(--border-radius-md)", fontSize: "13px", fontWeight: 600, cursor: answer.trim() && !loading ? "pointer" : "default" }}>
+              <button onClick={grade} disabled={!answer.trim() || loading} style={{ padding: "9px 20px", background: answer.trim() && !loading ? "var(--pine)" : "var(--color-background-secondary)", color: answer.trim() && !loading ? "white" : "var(--color-text-tertiary)", border: "none", borderRadius: "var(--border-radius-md)", fontSize: "13px", fontWeight: 600, cursor: answer.trim() && !loading ? "pointer" : "default" }}>
                 {loading ? "Grading…" : "Submit →"}
               </button>
             </div>
           </>
         ) : (
           <div>
-            <div style={{ display: "flex", gap: "10px", alignItems: "flex-start", padding: "0.85rem", background: result.score === 1 ? "#e6f3ed" : result.score === 0.5 ? "#faeeda" : "#fcebeb", borderRadius: "var(--border-radius-md)", marginBottom: "1rem" }}>
-              <span style={{ fontWeight: 700, color: result.score === 1 ? "#00693e" : result.score === 0.5 ? "#ba7517" : "#a32d2d", flexShrink: 0 }}>{result.score === 1 ? "✓" : result.score === 0.5 ? "½" : "✗"}</span>
+            <div style={{ display: "flex", gap: "10px", alignItems: "flex-start", padding: "0.85rem", background: result.score === 1 ? "rgba(26,58,42,0.09)" : result.score === 0.5 ? "#faeeda" : "#fcebeb", borderRadius: "var(--border-radius-md)", marginBottom: "1rem" }}>
+              <span style={{ fontWeight: 700, color: result.score === 1 ? "var(--pine)" : result.score === 0.5 ? "#ba7517" : "#a32d2d", flexShrink: 0 }}>{result.score === 1 ? "✓" : result.score === 0.5 ? "½" : "✗"}</span>
               <span style={{ fontSize: "13px", lineHeight: "1.65" }}>{result.feedback}</span>
             </div>
             <div style={{ display: "flex", justifyContent: "flex-end" }}>
-              <button onClick={next} style={{ padding: "9px 20px", background: "#00693e", color: "white", border: "none", borderRadius: "var(--border-radius-md)", fontSize: "13px", fontWeight: 600, cursor: "pointer" }}>
+              <button onClick={next} style={{ padding: "9px 20px", background: "var(--pine)", color: "white", border: "none", borderRadius: "var(--border-radius-md)", fontSize: "13px", fontWeight: 600, cursor: "pointer" }}>
                 {idx + 1 < due.length ? "Next →" : "Finish"}
               </button>
             </div>
@@ -810,7 +838,7 @@ function ReviewView({ flagged, setFlagged, onDone }) {
 }
 
 const Btn = ({ label, onClick, primary = true, disabled = false }) => (
-  <button onClick={onClick} disabled={disabled} style={{ padding: "10px 22px", background: primary && !disabled ? "#00693e" : "transparent", color: primary && !disabled ? "white" : "var(--color-text-secondary)", border: primary ? "none" : "0.5px solid var(--color-border-secondary)", borderRadius: "var(--border-radius-md)", fontSize: "14px", fontWeight: primary ? 600 : 400, cursor: disabled ? "default" : "pointer", opacity: disabled ? 0.5 : 1 }}>
+  <button onClick={onClick} disabled={disabled} style={{ padding: "10px 22px", background: primary && !disabled ? "var(--pine)" : "transparent", color: primary && !disabled ? "white" : "var(--color-text-secondary)", border: primary ? "none" : "1px solid var(--border)", borderRadius: "var(--border-radius-md)", fontSize: "14px", fontWeight: primary ? 600 : 400, cursor: disabled ? "default" : "pointer", opacity: disabled ? 0.5 : 1, boxShadow: primary && !disabled ? "0 2px 8px rgba(26,58,42,0.2)" : "none" }}>
     {label}
   </button>
 );
@@ -847,9 +875,9 @@ function SignInView({ onSignedIn }) {
       ];
 
   if (sent) return (
-    <div style={{ minHeight: "100vh", background: "linear-gradient(160deg, #003d24 0%, #00693e 50%, #e6f3ed 100%)", display: "flex", alignItems: "center", justifyContent: "center", padding: "2rem" }}>
+    <div style={{ minHeight: "100vh", background: "linear-gradient(160deg, #0d2018 0%, var(--pine) 50%, var(--pine-mid) 100%)", display: "flex", alignItems: "center", justifyContent: "center", padding: "2rem" }}>
       <div style={{ textAlign: "center", maxWidth: "380px", background: "white", borderRadius: "16px", padding: "3rem 2.5rem", boxShadow: "0 8px 40px rgba(0,0,0,0.18)" }}>
-        <div style={{ width: "72px", height: "72px", borderRadius: "50%", background: "#e6f3ed", border: "3px solid #00693e", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 1.5rem", fontSize: "30px" }}>✉</div>
+        <div style={{ width: "72px", height: "72px", borderRadius: "50%", background: "rgba(26,58,42,0.09)", border: "3px solid var(--pine)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 1.5rem", fontSize: "30px" }}>✉</div>
         <div style={{ fontSize: "22px", fontWeight: 700, marginBottom: "12px", letterSpacing: "-0.01em" }}>Check your email</div>
         <div style={{ fontSize: "14px", color: "#555", lineHeight: "1.7" }}>
           We sent a sign-in link to <strong>{email}</strong>.<br />
@@ -864,7 +892,7 @@ function SignInView({ onSignedIn }) {
   return (
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
       {/* Green hero */}
-      <div style={{ background: "linear-gradient(135deg, #003d24 0%, #00693e 100%)", color: "white", padding: "3.5rem 2rem 4rem", textAlign: "center" }}>
+      <div style={{ background: "linear-gradient(135deg, #0d2018 0%, var(--pine) 100%)", color: "white", padding: "3.5rem 2rem 4rem", textAlign: "center" }}>
         <div style={{ maxWidth: "640px", margin: "0 auto" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "14px", marginBottom: "1.75rem" }}>
             <div style={{ width: "56px", height: "56px", borderRadius: "50%", background: "rgba(255,255,255,0.15)", border: "2px solid rgba(255,255,255,0.3)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
@@ -902,7 +930,7 @@ function SignInView({ onSignedIn }) {
               placeholder="your@email.com" autoFocus
               style={{ width: "100%", boxSizing: "border-box", padding: "13px 15px", fontSize: "16px", borderRadius: "8px", border: "1px solid #d1d5db", background: "#fafafa", color: "#111", outline: "none", marginBottom: "12px" }} />
             <button onClick={send} disabled={!email.trim() || loading}
-              style={{ width: "100%", padding: "13px", background: email.trim() ? "#00693e" : "#e5e7eb", color: email.trim() ? "white" : "#999", border: "none", borderRadius: "8px", fontSize: "15px", fontWeight: 600, cursor: email.trim() ? "pointer" : "default", transition: "background 0.15s" }}>
+              style={{ width: "100%", padding: "13px", background: email.trim() ? "var(--pine)" : "#e5e7eb", color: email.trim() ? "white" : "#999", border: "none", borderRadius: "8px", fontSize: "15px", fontWeight: 600, cursor: email.trim() ? "pointer" : "default", transition: "background 0.15s" }}>
               {loading ? "Sending…" : "Send sign-in link →"}
             </button>
           </div>
@@ -1172,33 +1200,39 @@ Return JSON for a single re-instruction section:
   const chatProps = { topic, sections, questions, answers, results, followUpText, phase, history: chatHistory, setHistory: setChatHistory, user };
   const dueCount = flagged.filter(f => f.dueDate <= today()).length;
 
-  if (authLoading) return (
-    <div style={{ maxWidth: "1100px", margin: "0 auto", padding: "0 2rem 2rem", fontFamily: "var(--font-sans,system-ui)", color: "var(--color-text-primary)" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: "8px", height: "52px", borderBottom: "0.5px solid var(--color-border-tertiary)", marginBottom: "1.5rem", marginLeft: "-2rem", marginRight: "-2rem", paddingLeft: "2rem" }}>
-        <div style={{ width: "34px", height: "34px", borderRadius: "50%", background: "#00693e", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-          <img src="https://communications.dartmouth.edu/sites/communications/files/2024-07/lone-pine-rev.png" alt="Dartmouth" style={{ width: "24px", height: "24px", objectFit: "contain" }} />
-        </div>
-        <span style={{ fontSize: "14px", fontWeight: 700 }}>{COURSE_TITLE}</span>
+  const navBar = (
+    <nav style={{ position: "sticky", top: 0, zIndex: 100, background: "var(--pine)", display: "flex", alignItems: "center", gap: "12px", padding: "0 2.5rem", height: "64px", boxShadow: "0 1px 0 rgba(255,255,255,0.06), 0 4px 24px rgba(0,0,0,0.25)" }}>
+      <div style={{ width: "36px", height: "36px", borderRadius: "50%", background: "var(--gold)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <img src="https://communications.dartmouth.edu/sites/communications/files/2024-07/lone-pine-rev.png" alt="Dartmouth" style={{ width: "22px", height: "22px", objectFit: "contain", filter: "brightness(0)" }} />
       </div>
-      <div style={{ textAlign: "center", padding: "4rem 1rem" }}><LoadDots /></div>
-    </div>
+      <span style={{ fontFamily: "'Playfair Display', serif", fontSize: "1.1rem", fontWeight: 600, color: "#fff" }}>{COURSE_TITLE}</span>
+      <span style={{ fontSize: "0.7rem", color: "var(--mint)", letterSpacing: "0.06em", textTransform: "uppercase", opacity: 0.8 }}>{COURSE_LABEL}</span>
+    </nav>
   );
 
-  if (!user) return (
-    <div style={{ fontFamily: "var(--font-sans,system-ui)", color: "var(--color-text-primary)", minHeight: "100vh" }}>
-      <SignInView />
-    </div>
+  if (authLoading) return (
+    <>
+      {navBar}
+      <div style={{ textAlign: "center", padding: "6rem 1rem", position: "relative", zIndex: 1 }}><LoadDots /></div>
+    </>
   );
+
+  if (!user) return <SignInView />;
 
   return (
-    <div style={{ maxWidth: "1100px", margin: "0 auto", padding: "0 2rem 2rem", fontFamily: "var(--font-sans,system-ui)", color: "var(--color-text-primary)" }}>
-      <TopNav view={view} setView={setView} onHome={reset} sessionCount={sessions.length} formulaCount={formulas.length} dueCount={dueCount} user={user} onSignOut={signOut} />
+    <>
+      {/* Decorative background blobs */}
+      <div style={{ position: "fixed", top: "-120px", right: "-120px", width: "480px", height: "480px", borderRadius: "50%", background: "radial-gradient(circle, rgba(168,213,181,0.15) 0%, transparent 70%)", pointerEvents: "none", zIndex: 0 }} />
+      <div style={{ position: "fixed", bottom: "-80px", left: "-100px", width: "400px", height: "400px", borderRadius: "50%", background: "radial-gradient(circle, rgba(200,168,75,0.09) 0%, transparent 70%)", pointerEvents: "none", zIndex: 0 }} />
+
+      <div style={{ position: "relative", zIndex: 1 }}>
+        <TopNav view={view} setView={setView} onHome={reset} sessionCount={sessions.length} formulaCount={formulas.length} dueCount={dueCount} user={user} onSignOut={signOut} />
+        {view === "session" && <PhaseBar phase={phase} />}
+        <div style={{ maxWidth: "1100px", margin: "0 auto", padding: "2rem 2.5rem 3rem", color: "var(--text-dark)" }}>
       {view === "history" && <HistoryView sessions={sessions} />}
       {view === "formulas" && <FormulasView formulas={formulas} setFormulas={setFormulas} />}
       {view === "review" && <ReviewView flagged={flagged} setFlagged={setFlagged} onDone={() => setView("session")} />}
       {view === "help" && <HelpView />}
-
-      {view === "session" && <PhaseBar phase={phase} />}
 
       {view === "session" && error && (
         <div style={{ background: "var(--color-background-danger)", border: "0.5px solid var(--color-border-danger)", borderRadius: "var(--border-radius-md)", padding: "0.75rem 1rem", marginBottom: "1rem", fontSize: "13px", color: "var(--color-text-danger)" }}>{error}</div>
@@ -1213,32 +1247,63 @@ Return JSON for a single re-instruction section:
 
       {/* TOPIC */}
       {view === "session" && !loading && phase === "topic" && (
-        <div>
+        <div style={{ maxWidth: "680px", margin: "0 auto" }}>
+          {/* Hero */}
+          <div style={{ textAlign: "center", marginBottom: "2.5rem", animation: "fadeUp 0.5s ease both" }}>
+            <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", background: "rgba(26,58,42,0.07)", border: "1px solid rgba(26,58,42,0.12)", borderRadius: "100px", padding: "5px 16px", fontSize: "0.72rem", fontWeight: 600, color: "var(--pine-mid)", letterSpacing: "0.07em", textTransform: "uppercase", marginBottom: "20px" }}>
+              <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "var(--gold)", display: "inline-block" }} />
+              AI-Powered Learning
+            </div>
+            <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: "clamp(1.8rem, 3.5vw, 2.6rem)", fontWeight: 600, color: "var(--text-dark)", lineHeight: 1.2, letterSpacing: "-0.02em", margin: "0 0 14px" }}>
+              What would you like to study today?
+            </h1>
+            <p style={{ fontSize: "1rem", color: "var(--text-muted)", fontWeight: 400, lineHeight: 1.6, margin: 0 }}>
+              Pick a topic, work through a guided lesson, then test your understanding.
+            </p>
+          </div>
+
+          {/* Continue session */}
           {savedSession && (
-            <div style={{ background: "var(--color-background-primary)", border: "0.5px solid #00693e", borderRadius: "var(--border-radius-lg)", padding: "1.25rem 1.5rem", marginBottom: "1rem", display: "flex", alignItems: "center", gap: "14px" }}>
+            <div style={{ background: "#fff", border: "1.5px solid var(--pine)", borderRadius: "14px", padding: "1.25rem 1.5rem", marginBottom: "1rem", display: "flex", alignItems: "center", gap: "14px", animation: "fadeUp 0.5s 0.05s ease both", boxShadow: "0 4px 16px rgba(26,58,42,0.1)" }}>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: "11px", fontWeight: 700, color: "#00693e", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "3px" }}>
+                <div style={{ fontSize: "0.72rem", fontWeight: 700, color: "var(--pine-mid)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "3px" }}>
                   {{ learn: "Lesson in progress", quiz: "Quiz in progress", grade: "Quiz graded", followup: "Review in progress", done: "Session complete" }[savedSession.phase] || "Session saved"}
                 </div>
-                <div style={{ fontSize: "15px", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{savedSession.topic}</div>
+                <div style={{ fontSize: "15px", fontWeight: 600, color: "var(--text-dark)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{savedSession.topic}</div>
               </div>
-              <button onClick={continueSession} style={{ padding: "9px 20px", background: "#00693e", color: "white", border: "none", borderRadius: "var(--border-radius-md)", fontSize: "13px", fontWeight: 600, cursor: "pointer", flexShrink: 0 }}>Continue →</button>
+              <button onClick={continueSession} style={{ padding: "9px 20px", background: "var(--pine)", color: "white", border: "none", borderRadius: "10px", fontSize: "13px", fontWeight: 600, cursor: "pointer", flexShrink: 0, boxShadow: "0 2px 8px rgba(26,58,42,0.2)" }}>Continue →</button>
             </div>
           )}
-          <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: "var(--border-radius-lg)", padding: "1.5rem", marginBottom: "1.5rem" }}>
-            <label style={{ display: "block", fontSize: "13px", fontWeight: 500, color: "var(--color-text-secondary)", marginBottom: "8px" }}>{savedSession ? "Or start a new topic:" : "What would you like to study?"}</label>
-            <input type="text" value={topic} onChange={e => setTopic(e.target.value)} onKeyDown={e => e.key === "Enter" && topic.trim() && doLesson()}
-              placeholder="e.g. Gradient Descent, SVD, Eigenvalues…"
-              style={{ width: "100%", boxSizing: "border-box", padding: "10px 12px", fontSize: "15px", borderRadius: "var(--border-radius-md)", border: "0.5px solid var(--color-border-secondary)", background: "var(--color-background-secondary)", color: "var(--color-text-primary)", outline: "none" }} />
-            <button onClick={doLesson} disabled={!topic.trim()} style={{ marginTop: "12px", padding: "10px 24px", background: topic.trim() ? "#00693e" : "var(--color-background-secondary)", color: topic.trim() ? "white" : "var(--color-text-tertiary)", border: "none", borderRadius: "var(--border-radius-md)", fontSize: "14px", fontWeight: 600, cursor: topic.trim() ? "pointer" : "default" }}>
-              Start Lesson →
-            </button>
+
+          {/* Search card */}
+          <div style={{ background: "#fff", border: "1.5px solid var(--border)", borderRadius: "20px", padding: "28px 32px 24px", boxShadow: "0 8px 32px rgba(26,58,42,0.08), 0 2px 8px rgba(26,58,42,0.04)", marginBottom: "3rem", animation: "fadeUp 0.6s 0.1s ease both" }}>
+            <div style={{ fontSize: "0.78rem", fontWeight: 600, color: "var(--text-muted)", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: "12px" }}>
+              {savedSession ? "Or Start a New Topic" : "Choose a Topic"}
+            </div>
+            <div style={{ display: "flex", gap: "12px" }}>
+              <input type="text" value={topic} onChange={e => setTopic(e.target.value)} onKeyDown={e => e.key === "Enter" && topic.trim() && doLesson()}
+                placeholder={COURSE.id === "cosc77" ? "e.g. Gradient Descent, SVD, Eigenvalues…" : "e.g. Recursion, Binary Trees, Sorting…"}
+                autoFocus={!savedSession}
+                style={{ flex: 1, fontFamily: "var(--font-sans)", fontSize: "1.05rem", color: "var(--text-dark)", background: "var(--cream)", border: "1.5px solid var(--border)", borderRadius: "12px", padding: "14px 18px", outline: "none", transition: "border-color 0.2s, background 0.2s" }} />
+              <button onClick={doLesson} disabled={!topic.trim()}
+                style={{ fontFamily: "var(--font-sans)", fontSize: "0.95rem", fontWeight: 600, color: "#fff", background: topic.trim() ? "var(--pine)" : "var(--border)", border: "none", borderRadius: "12px", padding: "14px 26px", cursor: topic.trim() ? "pointer" : "default", whiteSpace: "nowrap", boxShadow: topic.trim() ? "0 2px 12px rgba(26,58,42,0.25)" : "none", transition: "background 0.18s, box-shadow 0.18s" }}>
+                Start Lesson →
+              </button>
+            </div>
           </div>
-          <p style={{ fontSize: "11px", fontWeight: 700, letterSpacing: "0.08em", color: "var(--color-text-tertiary)", textTransform: "uppercase", marginBottom: "10px" }}>Suggested Topics</p>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-            {SUGGESTED.map(s => (
-              <button key={s} onClick={() => setTopic(s)} style={{ padding: "6px 13px", fontSize: "13px", background: "var(--color-background-secondary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: "20px", cursor: "pointer", color: "var(--color-text-secondary)" }}>{s}</button>
-            ))}
+
+          {/* Suggested topics */}
+          <div style={{ animation: "fadeUp 0.6s 0.15s ease both" }}>
+            <p style={{ fontSize: "0.72rem", fontWeight: 700, color: "var(--text-muted)", letterSpacing: "0.1em", textTransform: "uppercase", margin: "0 0 16px" }}>Suggested Topics</p>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
+              {SUGGESTED.map((s, i) => (
+                <button key={s} onClick={() => setTopic(s)}
+                  style={{ fontFamily: "var(--font-sans)", fontSize: "0.85rem", fontWeight: 500, color: "var(--text-mid)", background: "#fff", border: "1.5px solid var(--border)", borderRadius: "100px", padding: "9px 18px", cursor: "pointer", display: "flex", alignItems: "center", gap: "7px", boxShadow: "0 1px 3px rgba(0,0,0,0.04)", animation: `chipIn 0.4s ${0.2 + i * 0.05}s ease both`, whiteSpace: "nowrap" }}>
+                  <span style={{ width: "7px", height: "7px", borderRadius: "50%", background: "var(--mint)", flexShrink: 0 }} />
+                  {s}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       )}
@@ -1248,13 +1313,13 @@ Return JSON for a single re-instruction section:
         <div>
           <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: "var(--border-radius-lg)", padding: "1.75rem 2rem", marginBottom: "1.25rem" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "1.75rem", paddingBottom: "1.25rem", borderBottom: "0.5px solid var(--color-border-tertiary)" }}>
-              <span style={{ padding: "3px 10px", background: "#e6f3ed", borderRadius: "var(--border-radius-md)", fontSize: "11px", fontWeight: 700, color: "#00693e", letterSpacing: "0.05em", textTransform: "uppercase" }}>Lesson</span>
+              <span style={{ padding: "3px 10px", background: "rgba(26,58,42,0.09)", borderRadius: "var(--border-radius-md)", fontSize: "11px", fontWeight: 700, color: "var(--pine)", letterSpacing: "0.05em", textTransform: "uppercase" }}>Lesson</span>
               <span style={{ fontSize: "16px", fontWeight: 600, flex: 1 }}>{topic}</span>
               {!confirmRegen
                 ? <button onClick={() => setConfirmRegen(true)} style={{ padding: "4px 11px", fontSize: "11px", fontWeight: 600, background: "none", border: "0.5px solid var(--color-border-tertiary)", borderRadius: "var(--border-radius-md)", color: "var(--color-text-tertiary)", cursor: "pointer", flexShrink: 0 }}>↺ Regen</button>
                 : <div style={{ display: "flex", gap: "6px", alignItems: "center", padding: "4px 8px", background: "var(--color-background-secondary)", border: "0.5px solid var(--color-border-secondary)", borderRadius: "var(--border-radius-md)", fontSize: "12px", color: "var(--color-text-secondary)" }}>
                     <span>Regenerate for <strong>{topic}</strong>? History &amp; formulas kept.</span>
-                    <button onClick={doRegen} style={{ padding: "2px 9px", fontSize: "12px", fontWeight: 600, background: "#00693e", color: "white", border: "none", borderRadius: "var(--border-radius-md)", cursor: "pointer" }}>Yes</button>
+                    <button onClick={doRegen} style={{ padding: "2px 9px", fontSize: "12px", fontWeight: 600, background: "var(--pine)", color: "white", border: "none", borderRadius: "var(--border-radius-md)", cursor: "pointer" }}>Yes</button>
                     <button onClick={() => setConfirmRegen(false)} style={{ padding: "2px 6px", fontSize: "12px", background: "none", border: "none", cursor: "pointer", color: "var(--color-text-tertiary)" }}>Cancel</button>
                   </div>
               }
@@ -1325,15 +1390,15 @@ Return JSON for a single re-instruction section:
                 <div style={{ fontSize: "12px", color: "var(--color-text-tertiary)", marginTop: "4px" }}>{results.score} / {results.total}</div>
               </div>
               <div style={{ flex: 1, fontSize: "13px", lineHeight: "1.85" }}>
-                {results.strongAreas?.length > 0 && <div><span style={{ color: "#00693e", fontWeight: 600 }}>Strong: </span><span style={{ color: "var(--color-text-secondary)" }}>{results.strongAreas.join(", ")}</span></div>}
+                {results.strongAreas?.length > 0 && <div><span style={{ color: "var(--pine)", fontWeight: 600 }}>Strong: </span><span style={{ color: "var(--color-text-secondary)" }}>{results.strongAreas.join(", ")}</span></div>}
                 {results.weakAreas?.length > 0 && <div><span style={{ color: "#a32d2d", fontWeight: 600 }}>Needs work: </span><span style={{ color: "var(--color-text-secondary)" }}>{results.weakAreas.join(", ")}</span></div>}
               </div>
             </div>
             {results.results?.map((r, i) => (
               <div key={i} style={{ padding: "0.85rem 0", borderBottom: i < results.results.length - 1 ? "0.5px solid var(--color-border-tertiary)" : "none" }}>
                 <div style={{ display: "flex", gap: "12px" }}>
-                  <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: r.score === 1 ? "#e6f3ed" : r.score === 0.5 ? "#faeeda" : "#fcebeb", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: "2px" }}>
-                    <span style={{ fontSize: "11px", fontWeight: 700, color: r.score === 1 ? "#00693e" : r.score === 0.5 ? "#ba7517" : "#a32d2d" }}>{r.score === 1 ? "✓" : r.score === 0.5 ? "½" : "✗"}</span>
+                  <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: r.score === 1 ? "rgba(26,58,42,0.09)" : r.score === 0.5 ? "#faeeda" : "#fcebeb", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: "2px" }}>
+                    <span style={{ fontSize: "11px", fontWeight: 700, color: r.score === 1 ? "var(--pine)" : r.score === 0.5 ? "#ba7517" : "#a32d2d" }}>{r.score === 1 ? "✓" : r.score === 0.5 ? "½" : "✗"}</span>
                   </div>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: "13px", fontWeight: 500, marginBottom: "4px", lineHeight: "1.55" }}>Q{i + 1}: {questions[i]?.question}</div>
@@ -1379,7 +1444,7 @@ Return JSON for a single re-instruction section:
       {view === "session" && !loading && phase === "done" && (
         <div>
           <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: "var(--border-radius-lg)", padding: "2.5rem 2rem", textAlign: "center" }}>
-            <div style={{ width: "52px", height: "52px", borderRadius: "50%", background: "#e6f3ed", border: "2px solid #00693e", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 1.25rem", fontSize: "22px", color: "#00693e", fontWeight: 700 }}>✓</div>
+            <div style={{ width: "52px", height: "52px", borderRadius: "50%", background: "rgba(26,58,42,0.09)", border: "2px solid var(--pine)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 1.25rem", fontSize: "22px", color: "var(--pine)", fontWeight: 700 }}>✓</div>
             <h2 style={{ fontSize: "20px", fontWeight: 700, margin: "0 0 0.4rem" }}>Session Complete</h2>
             <p style={{ fontSize: "15px", color: "var(--color-text-secondary)", margin: "0 0 0.5rem" }}>{topic}</p>
             {results && (
@@ -1392,6 +1457,8 @@ Return JSON for a single re-instruction section:
           <ChatPanel {...chatProps} />
         </div>
       )}
-    </div>
+        </div>
+      </div>
+    </>
   );
 }
