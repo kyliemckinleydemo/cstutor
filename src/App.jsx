@@ -282,8 +282,7 @@ Return ONLY the code block, no prose before or after.`
   return (
     <div style={{ marginTop: "0.75rem" }}>
       <button onClick={load} style={{ display: "flex", alignItems: "center", gap: "6px", padding: "5px 11px", fontSize: "11px", fontWeight: 600, background: open ? "#1e1e1e" : "var(--color-background-secondary)", color: open ? "#a8d8a8" : "var(--color-text-secondary)", border: open ? "none" : "0.5px solid var(--color-border-tertiary)", borderRadius: "var(--border-radius-md)", cursor: "pointer" }}>
-        <span style={{ fontFamily: "var(--font-mono,monospace)", fontSize: "10px" }}>{CODE_LANG}</span>
-        {loading ? "loading…" : open ? "hide code ×" : "show code →"}
+        {loading ? "loading…" : open ? `Hide example code (${CODE_LANG}) ×` : `Show example code (${CODE_LANG}) →`}
       </button>
       {open && (
         <div style={{ marginTop: "6px", borderRadius: "var(--border-radius-md)", background: "#1e1e1e", overflow: "hidden" }}>
