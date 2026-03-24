@@ -407,7 +407,9 @@ Write in flowing paragraphs, no bullet points. Be thorough — this is a teachin
   );
 }
 
-function ChatPanel({ topic, sections, questions, answers, results, followUpText, phase, history, setHistory }) {
+function ChatPanel({ topic, sections, questions, answers, results, followUpText, phase, history, setHistory, user }) {
+  const displayName = user?.email ? user.email.split("@")[0].split(".")[0] : "You";
+  const initials = displayName.slice(0, 1).toUpperCase();
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
   const [thinking, setThinking] = useState(false);
@@ -482,10 +484,10 @@ function ChatPanel({ topic, sections, questions, answers, results, followUpText,
               {history.map((m, i) => (
                 <div key={i} style={{ display: "flex", gap: "10px", flexDirection: m.from === "user" ? "row-reverse" : "row" }}>
                   <div style={{ width: "24px", height: "24px", borderRadius: "50%", flexShrink: 0, marginTop: "1px", background: m.from === "user" ? "#e6f3ed" : "var(--color-background-secondary)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    <span style={{ fontSize: "9px", fontWeight: 700, color: m.from === "user" ? "#00693e" : "var(--color-text-tertiary)" }}>{m.from === "user" ? "K" : "AI"}</span>
+                    <span style={{ fontSize: "9px", fontWeight: 700, color: m.from === "user" ? "#00693e" : "var(--color-text-tertiary)" }}>{m.from === "user" ? initials : "AI"}</span>
                   </div>
                   <div style={{ flex: 1, maxWidth: "88%" }}>
-                    <div style={{ fontSize: "11px", color: "var(--color-text-tertiary)", marginBottom: "3px", textAlign: m.from === "user" ? "right" : "left" }}>{m.from === "user" ? "Kylie" : "Tutor"}</div>
+                    <div style={{ fontSize: "11px", color: "var(--color-text-tertiary)", marginBottom: "3px", textAlign: m.from === "user" ? "right" : "left" }}>{m.from === "user" ? displayName : "Tutor"}</div>
                     <div style={{ background: m.from === "user" ? "#e6f3ed" : "var(--color-background-secondary)", borderRadius: m.from === "user" ? "12px 12px 2px 12px" : "12px 12px 12px 2px", padding: "10px 14px" }}>
                       <ProseParagraphs text={m.text} size="13px" />
                     </div>
@@ -550,10 +552,12 @@ function TopNav({ view, setView, onHome, sessionCount, formulaCount, dueCount, u
     { id: "help", label: "?" },
   ];
   return (
-    <div style={{ position: "sticky", top: 0, zIndex: 20, background: "var(--color-background-primary,#fff)", borderBottom: "0.5px solid var(--color-border-tertiary)", marginBottom: "1.5rem", marginLeft: "-1.5rem", marginRight: "-1.5rem", padding: "0 1.5rem" }}>
+    <div style={{ position: "sticky", top: 0, zIndex: 20, background: "var(--color-background-primary,#fff)", borderBottom: "0.5px solid var(--color-border-tertiary)", marginBottom: "1.5rem", marginLeft: "-2rem", marginRight: "-2rem", padding: "0 2rem" }}>
       <div style={{ display: "flex", alignItems: "center", gap: "12px", height: "52px" }}>
-        <button onClick={onHome} style={{ display: "flex", alignItems: "center", gap: "7px", background: "none", border: "none", cursor: "pointer", padding: 0, flexShrink: 0 }}>
-          <div style={{ width: "7px", height: "7px", borderRadius: "50%", background: "#00693e", flexShrink: 0 }} />
+        <button onClick={onHome} style={{ display: "flex", alignItems: "center", gap: "8px", background: "none", border: "none", cursor: "pointer", padding: 0, flexShrink: 0 }}>
+          <div style={{ width: "28px", height: "28px", borderRadius: "50%", background: "#00693e", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <img src="https://communications.dartmouth.edu/sites/communications/files/2024-07/lone-pine-rev.png" alt="Dartmouth" style={{ width: "18px", height: "18px", objectFit: "contain" }} />
+          </div>
           <span style={{ fontSize: "14px", fontWeight: 700, color: "var(--color-text-primary)", letterSpacing: "-0.01em" }}>{COURSE_TITLE}</span>
           <span style={{ fontSize: "11px", color: "var(--color-text-tertiary)", fontWeight: 500 }}>{COURSE_LABEL}</span>
         </button>
@@ -847,12 +851,10 @@ function SignInView({ onSignedIn }) {
     <div style={{ minHeight: "60vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
       <div style={{ width: "100%", maxWidth: "400px" }}>
         <div style={{ textAlign: "center", marginBottom: "2.5rem" }}>
-          <div style={{ display: "inline-flex", alignItems: "center", gap: "9px", marginBottom: "1rem" }}>
-            <div style={{ width: "12px", height: "12px", borderRadius: "50%", background: "#00693e" }} />
-            <span style={{ fontSize: "26px", fontWeight: 700, letterSpacing: "-0.02em" }}>{COURSE_TITLE}</span>
-          </div>
+          <img src="https://communications.dartmouth.edu/sites/communications/files/2024-08/dartmouth-lone-pine_1.jpg" alt="Dartmouth" style={{ width: "64px", height: "64px", objectFit: "contain", marginBottom: "1rem" }} />
+          <div style={{ fontSize: "26px", fontWeight: 700, letterSpacing: "-0.02em", marginBottom: "6px" }}>{COURSE_TITLE}</div>
           <div style={{ fontSize: "15px", color: "var(--color-text-secondary)" }}>{COURSE_LABEL}</div>
-          <div style={{ fontSize: "13px", color: "var(--color-text-tertiary)", marginTop: "6px" }}>{COURSE_SUBTITLE}</div>
+          <div style={{ fontSize: "13px", color: "var(--color-text-tertiary)", marginTop: "4px" }}>{COURSE_SUBTITLE}</div>
         </div>
         <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: "var(--border-radius-lg)", padding: "2.25rem", boxShadow: "0 2px 16px rgba(0,0,0,0.07)" }}>
           <div style={{ fontSize: "18px", fontWeight: 700, marginBottom: "6px", letterSpacing: "-0.01em" }}>Sign in</div>
@@ -1128,13 +1130,15 @@ Return JSON for a single re-instruction section:
 
   const pct = results ? Math.round((results.score / results.total) * 100) : 0;
   const followUpText = followUpSections.map(s => s.prose || "").join(" ");
-  const chatProps = { topic, sections, questions, answers, results, followUpText, phase, history: chatHistory, setHistory: setChatHistory };
+  const chatProps = { topic, sections, questions, answers, results, followUpText, phase, history: chatHistory, setHistory: setChatHistory, user };
   const dueCount = flagged.filter(f => f.dueDate <= today()).length;
 
   if (authLoading) return (
     <div style={{ maxWidth: "1100px", margin: "0 auto", padding: "0 2rem 2rem", fontFamily: "var(--font-sans,system-ui)", color: "var(--color-text-primary)" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: "7px", height: "52px", borderBottom: "0.5px solid var(--color-border-tertiary)", marginBottom: "1.5rem", marginLeft: "-2rem", marginRight: "-2rem", paddingLeft: "2rem" }}>
-        <div style={{ width: "7px", height: "7px", borderRadius: "50%", background: "#00693e" }} />
+      <div style={{ display: "flex", alignItems: "center", gap: "8px", height: "52px", borderBottom: "0.5px solid var(--color-border-tertiary)", marginBottom: "1.5rem", marginLeft: "-2rem", marginRight: "-2rem", paddingLeft: "2rem" }}>
+        <div style={{ width: "28px", height: "28px", borderRadius: "50%", background: "#00693e", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+          <img src="https://communications.dartmouth.edu/sites/communications/files/2024-07/lone-pine-rev.png" alt="Dartmouth" style={{ width: "18px", height: "18px", objectFit: "contain" }} />
+        </div>
         <span style={{ fontSize: "14px", fontWeight: 700 }}>{COURSE_TITLE}</span>
       </div>
       <div style={{ textAlign: "center", padding: "4rem 1rem" }}><LoadDots /></div>
