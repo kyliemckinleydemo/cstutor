@@ -3,7 +3,37 @@ import { useState, useRef, useEffect } from "react";
 const API = "/api/proxy";
 const MODEL = "claude-sonnet-4-20250514";
 
-const SYSTEM = `You are a patient, thorough tutor for a Dartmouth CS junior taking COSC 77. Your job is to build genuine understanding — not just cover material. Assume the student is smart but may not have deep background in this specific topic yet. Start from first principles. Use plain English before introducing notation. Write in full, connected paragraphs that flow naturally — not bullet points and not terse outlines. Explanations should feel like a knowledgeable friend explaining something carefully, not a textbook. Mathematical notation in plain text: A^T, ||v||, sum_{i=1}^n, grad_theta, x_i, lambda, sigma. Always explain *why* something is true or works before showing *how* to apply it.`;
+const COURSES = {
+  cosc77: {
+    id: "cosc77",
+    label: "Dartmouth COSC 77",
+    title: "Study Tutor",
+    subtitle: "Deep lessons · Drilldown on any formula · Adaptive quizzing",
+    system: `You are a patient, thorough tutor for a Dartmouth CS junior taking COSC 77 (Mathematical Foundations of Machine Learning). Your job is to build genuine understanding — not just cover material. Assume the student is smart but may not have deep background in this specific topic yet. Start from first principles. Use plain English before introducing notation. Write in full, connected paragraphs that flow naturally — not bullet points and not terse outlines. Explanations should feel like a knowledgeable friend explaining something carefully, not a textbook. Mathematical notation in plain text: A^T, ||v||, sum_{i=1}^n, grad_theta, x_i, lambda, sigma. Always explain *why* something is true or works before showing *how* to apply it.`,
+    suggested: [
+      "Eigenvalues & Eigenvectors", "Gradient Descent", "SVD",
+      "Bayes' Theorem & Probability", "Backpropagation", "PCA",
+      "Convex Optimization", "Big-O & Recurrences", "Markov Chains",
+      "Linear Regression & Least Squares",
+    ],
+  },
+  cosc10: {
+    id: "cosc10",
+    label: "Dartmouth COSC 10",
+    title: "Study Tutor",
+    subtitle: "Clear explanations · Code examples · Adaptive quizzing",
+    system: `You are a patient, thorough tutor for a Dartmouth student taking COSC 10 (Problem Solving via Object-Oriented Programming). Your job is to build genuine understanding — not just cover material. Assume the student is relatively new to computer science. Start from first principles using concrete, relatable examples before introducing technical terms or code. Write in full, connected paragraphs that flow naturally — not bullet points and not terse outlines. Explanations should feel like a knowledgeable friend explaining something carefully, not a textbook. All code examples should be in Java. Always explain *why* something works before showing *how* to use it. Connect every concept to real programs a student might actually write or use.`,
+    suggested: [
+      "Encapsulation & Classes", "Inheritance & Polymorphism", "Interfaces & Abstraction",
+      "ArrayLists & Linked Lists", "Binary Trees", "Hash Tables & Hashing",
+      "Graph Traversal (BFS & DFS)", "Shortest Paths (Dijkstra's)", "Recursion",
+      "Sorting Algorithms",
+    ],
+  },
+};
+
+const COURSE = COURSES[import.meta.env.VITE_COURSE_ID] || COURSES.cosc77;
+const { system: SYSTEM, suggested: SUGGESTED, label: COURSE_LABEL, title: COURSE_TITLE, subtitle: COURSE_SUBTITLE } = COURSE;
 
 async function callAPI(messages, system, maxTokens = 1500, attempt = 0) {
   const res = await fetch(API, {
@@ -95,12 +125,6 @@ function parseJSON(raw) {
   throw new Error("Could not parse response as JSON. Please try again.");
 }
 
-const SUGGESTED = [
-  "Eigenvalues & Eigenvectors", "Gradient Descent", "SVD",
-  "Bayes' Theorem & Probability", "Backpropagation", "PCA",
-  "Convex Optimization", "Big-O & Recurrences", "Markov Chains",
-  "Linear Regression & Least Squares",
-];
 
 function Inline({ text }) {
   if (!text) return null;
@@ -641,19 +665,19 @@ export default function App() {
   const [loadMsg, setLoadMsg] = useState("");
   const [error, setError] = useState("");
 
-  const [sessions, setSessions] = useState(() => stor.get("cstutor_sessions", []));
-  const [formulas, setFormulas] = useState(() => stor.get("cstutor_formulas", []));
-  const [flagged, setFlagged] = useState(() => stor.get("cstutor_flagged", []));
+  const [sessions, setSessions] = useState(() => stor.get(`cstutor_${COURSE.id}_sessions`, []));
+  const [formulas, setFormulas] = useState(() => stor.get(`cstutor_${COURSE.id}_formulas`, []));
+  const [flagged, setFlagged] = useState(() => stor.get(`cstutor_${COURSE.id}_flagged`, []));
   const sessionSavedRef = useRef(false);
 
   // Persist cross-session data
-  useEffect(() => stor.set("cstutor_sessions", sessions), [sessions]);
-  useEffect(() => stor.set("cstutor_formulas", formulas), [formulas]);
-  useEffect(() => stor.set("cstutor_flagged", flagged), [flagged]);
+  useEffect(() => stor.set(`cstutor_${COURSE.id}_sessions`, sessions), [sessions]);
+  useEffect(() => stor.set(`cstutor_${COURSE.id}_formulas`, formulas), [formulas]);
+  useEffect(() => stor.set(`cstutor_${COURSE.id}_flagged`, flagged), [flagged]);
 
   // Restore in-progress session on mount
   useEffect(() => {
-    const s = stor.get("cstutor_current", null);
+    const s = stor.get(`cstutor_${COURSE.id}_current`, null);
     if (s?.phase && s.phase !== "topic" && s.phase !== "done") {
       setTopic(s.topic || ""); setSections(s.sections || []); setQuestions(s.questions || []);
       setAnswers(s.answers || {}); setResults(s.results || null);
@@ -664,8 +688,8 @@ export default function App() {
 
   // Save in-progress session on state changes
   useEffect(() => {
-    if (phase === "topic" || phase === "done") { stor.set("cstutor_current", null); return; }
-    stor.set("cstutor_current", { topic, sections, questions, answers, results, followUpSections, videos, phase });
+    if (phase === "topic" || phase === "done") { stor.set(`cstutor_${COURSE.id}_current`, null); return; }
+    stor.set(`cstutor_${COURSE.id}_current`, { topic, sections, questions, answers, results, followUpSections, videos, phase });
   }, [phase, answers]);
 
   // Save to history when session completes
@@ -673,7 +697,7 @@ export default function App() {
     if (phase === "done" && results && !sessionSavedRef.current) {
       sessionSavedRef.current = true;
       setSessions(prev => [{ id: Date.now(), topic, date: today(), score: results.score, total: results.total, weakAreas: results.weakAreas || [], strongAreas: results.strongAreas || [] }, ...prev]);
-      stor.set("cstutor_current", null);
+      stor.set(`cstutor_${COURSE.id}_current`, null);
     }
   }, [phase]);
 
@@ -810,10 +834,10 @@ Return JSON for a single re-instruction section:
       <div style={{ marginBottom: "1.25rem" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
           <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#00693e" }} />
-          <span style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.12em", color: "#00693e", textTransform: "uppercase" }}>Dartmouth COSC 77</span>
+          <span style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.12em", color: "#00693e", textTransform: "uppercase" }}>{COURSE_LABEL}</span>
         </div>
-        <h1 onClick={reset} style={{ fontSize: "26px", fontWeight: 700, margin: 0, letterSpacing: "-0.02em", cursor: (view !== "session" || phase !== "topic") ? "pointer" : "default" }}>Study Tutor</h1>
-        <p style={{ fontSize: "13px", color: "var(--color-text-secondary)", margin: "4px 0 0" }}>Deep lessons · Drilldown on any formula · Adaptive quizzing</p>
+        <h1 onClick={reset} style={{ fontSize: "26px", fontWeight: 700, margin: 0, letterSpacing: "-0.02em", cursor: (view !== "session" || phase !== "topic") ? "pointer" : "default" }}>{COURSE_TITLE}</h1>
+        <p style={{ fontSize: "13px", color: "var(--color-text-secondary)", margin: "4px 0 0" }}>{COURSE_SUBTITLE}</p>
       </div>
 
       {showNav && <NavBar view={view} setView={setView} sessionCount={sessions.length} formulaCount={formulas.length} dueCount={dueCount} />}
