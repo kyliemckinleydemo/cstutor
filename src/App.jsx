@@ -533,7 +533,7 @@ function NavBar({ view, setView, sessionCount, formulaCount, dueCount }) {
   const tabs = [
     { id: "session", label: "New Session" },
     { id: "history", label: `History${sessionCount ? ` (${sessionCount})` : ""}` },
-    { id: "formulas", label: `Formulas${formulaCount ? ` (${formulaCount})` : ""}` },
+    { id: "formulas", label: `Formulas/Definitions${formulaCount ? ` (${formulaCount})` : ""}` },
     { id: "review", label: `Review${dueCount ? ` (${dueCount} due)` : ""}`, urgent: dueCount > 0 },
   ];
   return (
