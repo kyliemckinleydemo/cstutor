@@ -204,9 +204,9 @@ Be thorough. Assume nothing except basic algebra.`
   return (
     <div style={{ margin: "0.4rem 0 1rem", borderRadius: "var(--border-radius-md)", border: "0.5px solid " + (open ? "var(--color-border-secondary)" : "var(--color-border-tertiary)"), overflow: "hidden", background: open ? "var(--color-background-secondary)" : "transparent", transition: "background 0.2s" }}>
       <button onClick={load} style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.65rem 1rem", background: "none", border: "none", cursor: "pointer", textAlign: "left", gap: "10px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "10px", flex: 1, minWidth: 0 }}>
+        <div style={{ display: "flex", alignItems: "flex-start", gap: "10px", flex: 1, minWidth: 0 }}>
           <code style={{ fontFamily: "var(--font-mono,monospace)", fontSize: "13px", background: "rgba(0,105,62,0.09)", color: "#004d2e", padding: "3px 9px", borderRadius: "4px", fontWeight: 600, whiteSpace: "nowrap", flexShrink: 0 }}>{item.label}</code>
-          <span style={{ fontSize: "13px", color: "var(--color-text-secondary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.context}</span>
+          <span style={{ fontSize: "13px", color: "var(--color-text-secondary)", lineHeight: "1.5" }}>{item.context}</span>
         </div>
         <span style={{ fontSize: "11px", fontWeight: 600, color: open ? "#ba7517" : "#00693e", whiteSpace: "nowrap", background: open ? "#faeeda" : "#e6f3ed", padding: "3px 9px", borderRadius: "var(--border-radius-md)", flexShrink: 0 }}>
           {loading ? "loading…" : open ? "close ×" : "explain →"}
