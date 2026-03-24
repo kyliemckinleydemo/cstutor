@@ -755,6 +755,7 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [loadMsg, setLoadMsg] = useState("");
   const [error, setError] = useState("");
+  const [confirmRegen, setConfirmRegen] = useState(false);
 
   const [sessions, setSessions] = useState(() => stor.get(`cstutor_${COURSE.id}_sessions`, []));
   const [formulas, setFormulas] = useState(() => stor.get(`cstutor_${COURSE.id}_formulas`, []));
@@ -796,6 +797,13 @@ export default function App() {
     setLoading(true); setLoadMsg(msg); setError("");
     try { await fn(); } catch (e) { setError(e.message || "Something went wrong — please try again."); }
     setLoading(false); setLoadMsg("");
+  };
+
+  const doRegen = () => {
+    setConfirmRegen(false);
+    sessionSavedRef.current = false;
+    setAnswers({}); setResults(null); setFollowUpSections([]); setChatHistory([]); setError("");
+    doLesson();
   };
 
   const doLesson = () => wrap(async () => {
@@ -995,8 +1003,18 @@ Return JSON for a single re-instruction section:
             </div>
           )}
           <ChatPanel {...chatProps} />
-          <div style={{ display: "flex", justifyContent: "space-between", marginTop: "1.25rem" }}>
-            <Btn label="← Change Topic" onClick={() => setPhase("topic")} primary={false} />
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginTop: "1.25rem", gap: "10px", flexWrap: "wrap" }}>
+            <div style={{ display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap" }}>
+              <Btn label="← Change Topic" onClick={() => { setConfirmRegen(false); setPhase("topic"); }} primary={false} />
+              {!confirmRegen
+                ? <button onClick={() => setConfirmRegen(true)} style={{ padding: "8px 14px", fontSize: "13px", fontWeight: 500, background: "none", border: "0.5px solid var(--color-border-secondary)", borderRadius: "var(--border-radius-md)", color: "var(--color-text-tertiary)", cursor: "pointer" }}>↺ Regen</button>
+                : <div style={{ display: "flex", gap: "6px", alignItems: "center", padding: "6px 10px", background: "var(--color-background-secondary)", border: "0.5px solid var(--color-border-secondary)", borderRadius: "var(--border-radius-md)", fontSize: "12px", color: "var(--color-text-secondary)" }}>
+                    <span>Regenerate lesson &amp; quiz for <strong>{topic}</strong>? Your history &amp; formulas are kept.</span>
+                    <button onClick={doRegen} style={{ padding: "3px 10px", fontSize: "12px", fontWeight: 600, background: "#00693e", color: "white", border: "none", borderRadius: "var(--border-radius-md)", cursor: "pointer" }}>Yes</button>
+                    <button onClick={() => setConfirmRegen(false)} style={{ padding: "3px 8px", fontSize: "12px", background: "none", border: "none", cursor: "pointer", color: "var(--color-text-tertiary)" }}>Cancel</button>
+                  </div>
+              }
+            </div>
             <Btn label="Ready — Take Quiz →" onClick={doQuiz} />
           </div>
         </div>
