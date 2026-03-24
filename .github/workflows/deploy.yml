@@ -32,6 +32,7 @@ jobs:
       - run: npm run build
         env:
           VITE_API_KEY: ${{ secrets.VITE_API_KEY }}
+          VITE_YOUTUBE_KEY: ${{ secrets.VITE_YOUTUBE_KEY }}
 
       - uses: actions/configure-pages@v4
 
