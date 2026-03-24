@@ -832,7 +832,7 @@ function SignInView({ onSignedIn }) {
     <div style={{ textAlign: "center", padding: "4rem 1rem" }}>
       <div style={{ width: "52px", height: "52px", borderRadius: "50%", background: "#e6f3ed", border: "2px solid #00693e", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 1.25rem", fontSize: "22px" }}>✉</div>
       <div style={{ fontSize: "17px", fontWeight: 700, marginBottom: "8px" }}>Check your email</div>
-      <div style={{ fontSize: "14px", color: "var(--color-text-secondary)" }}>Sent a sign-in link to <strong>{email}</strong>.<br />The link expires in 15 minutes.</div>
+      <div style={{ fontSize: "14px", color: "var(--color-text-secondary)" }}>Sent a sign-in link to <strong>{email}</strong>.<br />The link expires in 15 minutes. Check your spam folder if you don't see it.</div>
       <button onClick={() => setSent(false)} style={{ marginTop: "1.5rem", fontSize: "13px", background: "none", border: "none", color: "var(--color-text-tertiary)", cursor: "pointer", textDecoration: "underline" }}>Use a different email</button>
     </div>
   );
