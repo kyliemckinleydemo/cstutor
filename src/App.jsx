@@ -829,27 +829,44 @@ function SignInView({ onSignedIn }) {
   };
 
   if (sent) return (
-    <div style={{ textAlign: "center", padding: "4rem 1rem" }}>
-      <div style={{ width: "52px", height: "52px", borderRadius: "50%", background: "#e6f3ed", border: "2px solid #00693e", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 1.25rem", fontSize: "22px" }}>✉</div>
-      <div style={{ fontSize: "17px", fontWeight: 700, marginBottom: "8px" }}>Check your email</div>
-      <div style={{ fontSize: "14px", color: "var(--color-text-secondary)" }}>Sent a sign-in link to <strong>{email}</strong>.<br />The link expires in 15 minutes. Check your spam folder if you don't see it.</div>
-      <button onClick={() => setSent(false)} style={{ marginTop: "1.5rem", fontSize: "13px", background: "none", border: "none", color: "var(--color-text-tertiary)", cursor: "pointer", textDecoration: "underline" }}>Use a different email</button>
+    <div style={{ minHeight: "60vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div style={{ textAlign: "center", maxWidth: "380px" }}>
+        <div style={{ width: "64px", height: "64px", borderRadius: "50%", background: "#e6f3ed", border: "2px solid #00693e", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 1.5rem", fontSize: "26px" }}>✉</div>
+        <div style={{ fontSize: "20px", fontWeight: 700, marginBottom: "10px", letterSpacing: "-0.01em" }}>Check your email</div>
+        <div style={{ fontSize: "14px", color: "var(--color-text-secondary)", lineHeight: "1.65" }}>
+          We sent a sign-in link to <strong>{email}</strong>.<br />
+          It expires in 15 minutes.
+        </div>
+        <div style={{ marginTop: "10px", fontSize: "12px", color: "var(--color-text-tertiary)" }}>Don't see it? Check your spam folder.</div>
+        <button onClick={() => setSent(false)} style={{ marginTop: "1.75rem", fontSize: "13px", background: "none", border: "0.5px solid var(--color-border-tertiary)", borderRadius: "20px", padding: "5px 14px", color: "var(--color-text-tertiary)", cursor: "pointer" }}>Use a different email</button>
+      </div>
     </div>
   );
 
   return (
-    <div style={{ maxWidth: "400px", margin: "4rem auto" }}>
-      <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: "var(--border-radius-lg)", padding: "2rem" }}>
-        <div style={{ fontSize: "17px", fontWeight: 700, marginBottom: "6px" }}>Sign in</div>
-        <div style={{ fontSize: "13px", color: "var(--color-text-secondary)", marginBottom: "1.5rem" }}>We'll email you a sign-in link. No password needed.</div>
-        {error && <div style={{ fontSize: "13px", color: "#a32d2d", marginBottom: "1rem" }}>{error}</div>}
-        <input type="email" value={email} onChange={e => setEmail(e.target.value)} onKeyDown={e => e.key === "Enter" && send()}
-          placeholder="your@email.com" autoFocus
-          style={{ width: "100%", boxSizing: "border-box", padding: "10px 12px", fontSize: "15px", borderRadius: "var(--border-radius-md)", border: "0.5px solid var(--color-border-secondary)", background: "var(--color-background-secondary)", color: "var(--color-text-primary)", outline: "none", marginBottom: "12px" }} />
-        <button onClick={send} disabled={!email.trim() || loading}
-          style={{ width: "100%", padding: "10px", background: email.trim() ? "#00693e" : "var(--color-background-secondary)", color: email.trim() ? "white" : "var(--color-text-tertiary)", border: "none", borderRadius: "var(--border-radius-md)", fontSize: "14px", fontWeight: 600, cursor: email.trim() ? "pointer" : "default" }}>
-          {loading ? "Sending…" : "Send sign-in link →"}
-        </button>
+    <div style={{ minHeight: "60vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div style={{ width: "100%", maxWidth: "400px" }}>
+        <div style={{ textAlign: "center", marginBottom: "2.5rem" }}>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: "9px", marginBottom: "1rem" }}>
+            <div style={{ width: "12px", height: "12px", borderRadius: "50%", background: "#00693e" }} />
+            <span style={{ fontSize: "26px", fontWeight: 700, letterSpacing: "-0.02em" }}>{COURSE_TITLE}</span>
+          </div>
+          <div style={{ fontSize: "15px", color: "var(--color-text-secondary)" }}>{COURSE_LABEL}</div>
+          <div style={{ fontSize: "13px", color: "var(--color-text-tertiary)", marginTop: "6px" }}>{COURSE_SUBTITLE}</div>
+        </div>
+        <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: "var(--border-radius-lg)", padding: "2.25rem", boxShadow: "0 2px 16px rgba(0,0,0,0.07)" }}>
+          <div style={{ fontSize: "18px", fontWeight: 700, marginBottom: "6px", letterSpacing: "-0.01em" }}>Sign in</div>
+          <div style={{ fontSize: "14px", color: "var(--color-text-secondary)", marginBottom: "1.75rem" }}>No password — we'll email you a sign-in link.</div>
+          {error && <div style={{ fontSize: "13px", color: "#a32d2d", background: "#fcebeb", padding: "10px 14px", borderRadius: "var(--border-radius-md)", marginBottom: "1rem" }}>{error}</div>}
+          <input type="email" value={email} onChange={e => setEmail(e.target.value)} onKeyDown={e => e.key === "Enter" && send()}
+            placeholder="your@email.com" autoFocus
+            style={{ width: "100%", boxSizing: "border-box", padding: "13px 15px", fontSize: "16px", borderRadius: "var(--border-radius-md)", border: "0.5px solid var(--color-border-secondary)", background: "var(--color-background-secondary)", color: "var(--color-text-primary)", outline: "none", marginBottom: "12px" }} />
+          <button onClick={send} disabled={!email.trim() || loading}
+            style={{ width: "100%", padding: "13px", background: email.trim() ? "#00693e" : "var(--color-background-secondary)", color: email.trim() ? "white" : "var(--color-text-tertiary)", border: "none", borderRadius: "var(--border-radius-md)", fontSize: "15px", fontWeight: 600, cursor: email.trim() ? "pointer" : "default", transition: "background 0.15s" }}>
+            {loading ? "Sending…" : "Send sign-in link →"}
+          </button>
+        </div>
+        <div style={{ textAlign: "center", marginTop: "1.25rem", fontSize: "13px", color: "var(--color-text-tertiary)" }}>Your study data syncs across all your devices.</div>
       </div>
     </div>
   );
