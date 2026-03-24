@@ -137,7 +137,7 @@ function Inline({ text }) {
         if (p.startsWith("**") && p.endsWith("**"))
           return <strong key={j} style={{ fontWeight: 600 }}>{p.slice(2, -2)}</strong>;
         if (p.startsWith("`") && p.endsWith("`"))
-          return <code key={j} style={{ fontFamily: "var(--font-mono,monospace)", background: "rgba(0,105,62,0.1)", color: "#004d2e", padding: "2px 6px", borderRadius: "4px", fontSize: "0.87em" }}>{p.slice(1, -1)}</code>;
+          return <code key={j} style={{ fontFamily: "var(--font-mono,monospace)", background: "rgba(26,58,42,0.1)", color: "var(--pine-mid)", padding: "2px 6px", borderRadius: "4px", fontSize: "0.87em" }}>{p.slice(1, -1)}</code>;
         if (p.startsWith("*") && p.endsWith("*"))
           return <em key={j}>{p.slice(1, -1)}</em>;
         return p;
@@ -303,10 +303,10 @@ Return ONLY the code block, no prose before or after.`
       {open && (
         <div style={{ marginTop: "6px", borderRadius: "var(--border-radius-md)", background: "#1e1e1e", overflow: "hidden", maxWidth: "100%" }}>
           {loading
-            ? <div style={{ padding: "1rem", display: "flex", alignItems: "center", gap: "10px" }}><LoadDots /><span style={{ fontSize: "12px", color: "#888" }}>Generating example…</span></div>
+            ? <div style={{ padding: "1rem", display: "flex", alignItems: "center", gap: "10px" }}><LoadDots /><span style={{ fontSize: "12px", color: "var(--mint)" }}>Generating example…</span></div>
             : <>
                 <div style={{ display: "flex", justifyContent: "flex-end", padding: "4px 8px 0" }}>
-                  <button onClick={copyCode} style={{ background: "none", border: "0.5px solid #444", borderRadius: "4px", color: copied ? "#a8d8a8" : "#888", fontSize: "11px", padding: "2px 9px", cursor: "pointer" }}>{copied ? "Copied!" : "Copy"}</button>
+                  <button onClick={copyCode} style={{ background: "none", border: "0.5px solid rgba(255,255,255,0.2)", borderRadius: "4px", color: copied ? "var(--mint)" : "rgba(255,255,255,0.45)", fontSize: "11px", padding: "2px 9px", cursor: "pointer" }}>{copied ? "Copied!" : "Copy"}</button>
                 </div>
                 <pre style={{ margin: 0, padding: "0.5rem 1.25rem 1rem", fontSize: "12.5px", lineHeight: "1.65", color: "#d4d4d4", fontFamily: "var(--font-mono,monospace)", overflowX: "auto", whiteSpace: "pre" }}>{code}</pre>
               </>}
@@ -568,11 +568,11 @@ function TopNav({ view, setView, onHome, sessionCount, formulaCount, dueCount, u
     }}>
       {/* Brand */}
       <button onClick={onHome} style={{ display: "flex", alignItems: "center", gap: "12px", background: "none", border: "none", cursor: "pointer", padding: 0, flexShrink: 0 }}>
-        <div style={{ width: "36px", height: "36px", borderRadius: "50%", background: "var(--gold)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-          <img src="https://communications.dartmouth.edu/sites/communications/files/2024-07/lone-pine-rev.png" alt="Dartmouth" style={{ width: "22px", height: "22px", objectFit: "contain", filter: "brightness(0)" }} />
+        <div style={{ width: "44px", height: "44px", borderRadius: "50%", background: "var(--gold)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+          <img src="https://communications.dartmouth.edu/sites/communications/files/2024-07/lone-pine-rev.png" alt="Dartmouth" style={{ width: "32px", height: "32px", objectFit: "contain" }} />
         </div>
         <div style={{ textAlign: "left" }}>
-          <div style={{ fontFamily: "'Playfair Display', serif", fontSize: "1.1rem", fontWeight: 600, color: "#fff", letterSpacing: "0.01em", lineHeight: 1.2 }}>{COURSE_TITLE}</div>
+          <div style={{ fontFamily: "var(--font-serif)", fontSize: "1.1rem", fontWeight: 600, color: "#fff", letterSpacing: "0.01em", lineHeight: 1.2 }}>{COURSE_TITLE}</div>
           <div style={{ fontSize: "0.7rem", fontWeight: 500, color: "var(--mint)", letterSpacing: "0.06em", textTransform: "uppercase", opacity: 0.85 }}>{COURSE_LABEL}</div>
         </div>
       </button>
@@ -713,7 +713,7 @@ function FormulasView({ formulas, setFormulas }) {
             <div style={{ display: "flex", flexDirection: "column", gap: "3px" }}>
               {byTopic[topic].map((f, i) => (
                 <div key={i} data-ftype={ftype} style={{ display: "flex", gap: "8px", alignItems: "flex-start", padding: "4px 8px", background: rowBg, border: rowBorder, borderRadius: "5px" }}>
-                  <code style={{ fontFamily: "var(--font-mono,monospace)", fontSize: "11px", background: isFormula ? "rgba(0,105,62,0.12)" : "rgba(100,100,110,0.12)", color: isFormula ? "#004d2e" : "#444", padding: "1px 6px", borderRadius: "3px", fontWeight: 600, whiteSpace: "pre", flexShrink: 0 }}>{f.label}</code>
+                  <code style={{ fontFamily: "var(--font-mono,monospace)", fontSize: "11px", background: isFormula ? "rgba(26,58,42,0.1)" : "rgba(26,58,42,0.06)", color: isFormula ? "var(--pine-mid)" : "var(--text-muted)", padding: "1px 6px", borderRadius: "3px", fontWeight: 600, whiteSpace: "pre", flexShrink: 0 }}>{f.label}</code>
                   <span style={{ fontSize: "11px", color: "var(--color-text-secondary)", lineHeight: "1.5", flex: 1 }}>{f.context}</span>
                   <button onClick={() => deleteEntry(f)} className="no-print" style={{ flexShrink: 0, background: "none", border: "none", cursor: "pointer", color: "var(--color-text-tertiary)", fontSize: "13px", lineHeight: 1, padding: "1px 3px", borderRadius: "3px" }}>×</button>
                 </div>
@@ -737,7 +737,7 @@ function FormulasView({ formulas, setFormulas }) {
         <button onClick={() => window.print()} style={{ padding: "5px 14px", fontSize: "12px", fontWeight: 600, borderRadius: "var(--border-radius-md)", border: "0.5px solid var(--color-border-secondary)", background: "var(--color-background-secondary)", color: "var(--color-text-secondary)", cursor: "pointer" }}>Print / Save PDF</button>
       </div>
       <Section items={formulaItems} heading="Formulas & Expressions" color="var(--pine)" ftype="formulas" />
-      <Section items={definitionItems} heading="Definitions" color="#555" ftype="definitions" />
+      <Section items={definitionItems} heading="Definitions" color="var(--text-mid)" ftype="definitions" />
     </div>
   );
 }
@@ -879,12 +879,12 @@ function SignInView({ onSignedIn }) {
       <div style={{ textAlign: "center", maxWidth: "380px", background: "white", borderRadius: "16px", padding: "3rem 2.5rem", boxShadow: "0 8px 40px rgba(0,0,0,0.18)" }}>
         <div style={{ width: "72px", height: "72px", borderRadius: "50%", background: "rgba(26,58,42,0.09)", border: "3px solid var(--pine)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 1.5rem", fontSize: "30px" }}>✉</div>
         <div style={{ fontSize: "22px", fontWeight: 700, marginBottom: "12px", letterSpacing: "-0.01em" }}>Check your email</div>
-        <div style={{ fontSize: "14px", color: "#555", lineHeight: "1.7" }}>
+        <div style={{ fontSize: "14px", color: "var(--text-mid)", lineHeight: "1.7" }}>
           We sent a sign-in link to <strong>{email}</strong>.<br />
           It expires in 15 minutes.
         </div>
-        <div style={{ marginTop: "12px", fontSize: "12px", color: "#999" }}>Don't see it? Check your spam folder.</div>
-        <button onClick={() => setSent(false)} style={{ marginTop: "2rem", fontSize: "13px", background: "none", border: "1px solid #ddd", borderRadius: "20px", padding: "6px 16px", color: "#777", cursor: "pointer" }}>Use a different email</button>
+        <div style={{ marginTop: "12px", fontSize: "12px", color: "var(--text-muted)" }}>Don't see it? Check your spam folder.</div>
+        <button onClick={() => setSent(false)} style={{ marginTop: "2rem", fontSize: "13px", background: "none", border: "1px solid var(--border)", borderRadius: "20px", padding: "6px 16px", color: "var(--text-muted)", cursor: "pointer" }}>Use a different email</button>
       </div>
     </div>
   );
@@ -920,21 +920,21 @@ function SignInView({ onSignedIn }) {
       </div>
 
       {/* Sign-in card */}
-      <div style={{ flex: 1, background: "#f7f8fa", display: "flex", alignItems: "flex-start", justifyContent: "center", padding: "3rem 2rem" }}>
+      <div style={{ flex: 1, background: "var(--cream)", display: "flex", alignItems: "flex-start", justifyContent: "center", padding: "3rem 2rem" }}>
         <div style={{ width: "100%", maxWidth: "400px" }}>
-          <div style={{ background: "white", border: "1px solid #e5e7eb", borderRadius: "14px", padding: "2.5rem", boxShadow: "0 4px 24px rgba(0,0,0,0.08)" }}>
-            <div style={{ fontSize: "20px", fontWeight: 700, marginBottom: "6px", letterSpacing: "-0.01em" }}>Sign in to get started</div>
-            <div style={{ fontSize: "14px", color: "#666", marginBottom: "1.75rem" }}>No password — we'll email you a one-click sign-in link.</div>
-            {error && <div style={{ fontSize: "13px", color: "#a32d2d", background: "#fcebeb", padding: "10px 14px", borderRadius: "8px", marginBottom: "1rem" }}>{error}</div>}
+          <div style={{ background: "#fff", border: "1.5px solid var(--border)", borderRadius: "14px", padding: "2.5rem", boxShadow: "0 4px 24px rgba(26,58,42,0.08)" }}>
+            <div style={{ fontSize: "20px", fontWeight: 700, marginBottom: "6px", letterSpacing: "-0.01em", color: "var(--text-dark)" }}>Sign in to get started</div>
+            <div style={{ fontSize: "14px", color: "var(--text-muted)", marginBottom: "1.75rem" }}>No password — we'll email you a one-click sign-in link.</div>
+            {error && <div style={{ fontSize: "13px", color: "var(--color-text-danger)", background: "var(--color-background-danger)", padding: "10px 14px", borderRadius: "8px", marginBottom: "1rem" }}>{error}</div>}
             <input type="email" value={email} onChange={e => setEmail(e.target.value)} onKeyDown={e => e.key === "Enter" && send()}
               placeholder="your@email.com" autoFocus
-              style={{ width: "100%", boxSizing: "border-box", padding: "13px 15px", fontSize: "16px", borderRadius: "8px", border: "1px solid #d1d5db", background: "#fafafa", color: "#111", outline: "none", marginBottom: "12px" }} />
+              style={{ width: "100%", boxSizing: "border-box", padding: "13px 15px", fontSize: "16px", borderRadius: "8px", border: "1.5px solid var(--border)", background: "var(--cream)", color: "var(--text-dark)", outline: "none", marginBottom: "12px", fontFamily: "var(--font-sans)" }} />
             <button onClick={send} disabled={!email.trim() || loading}
-              style={{ width: "100%", padding: "13px", background: email.trim() ? "var(--pine)" : "#e5e7eb", color: email.trim() ? "white" : "#999", border: "none", borderRadius: "8px", fontSize: "15px", fontWeight: 600, cursor: email.trim() ? "pointer" : "default", transition: "background 0.15s" }}>
+              style={{ width: "100%", padding: "13px", background: email.trim() ? "var(--pine)" : "var(--cream-dark)", color: email.trim() ? "white" : "var(--text-muted)", border: "none", borderRadius: "8px", fontSize: "15px", fontWeight: 600, cursor: email.trim() ? "pointer" : "default", transition: "background 0.15s", boxShadow: email.trim() ? "0 2px 8px rgba(26,58,42,0.2)" : "none" }}>
               {loading ? "Sending…" : "Send sign-in link →"}
             </button>
           </div>
-          <div style={{ textAlign: "center", marginTop: "1.25rem", fontSize: "13px", color: "#999" }}>Your study data syncs across all your devices.</div>
+          <div style={{ textAlign: "center", marginTop: "1.25rem", fontSize: "13px", color: "var(--text-muted)" }}>Your study data syncs across all your devices.</div>
         </div>
       </div>
     </div>
@@ -1202,10 +1202,10 @@ Return JSON for a single re-instruction section:
 
   const navBar = (
     <nav style={{ position: "sticky", top: 0, zIndex: 100, background: "var(--pine)", display: "flex", alignItems: "center", gap: "12px", padding: "0 2.5rem", height: "64px", boxShadow: "0 1px 0 rgba(255,255,255,0.06), 0 4px 24px rgba(0,0,0,0.25)" }}>
-      <div style={{ width: "36px", height: "36px", borderRadius: "50%", background: "var(--gold)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <img src="https://communications.dartmouth.edu/sites/communications/files/2024-07/lone-pine-rev.png" alt="Dartmouth" style={{ width: "22px", height: "22px", objectFit: "contain", filter: "brightness(0)" }} />
+      <div style={{ width: "44px", height: "44px", borderRadius: "50%", background: "var(--gold)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <img src="https://communications.dartmouth.edu/sites/communications/files/2024-07/lone-pine-rev.png" alt="Dartmouth" style={{ width: "32px", height: "32px", objectFit: "contain" }} />
       </div>
-      <span style={{ fontFamily: "'Playfair Display', serif", fontSize: "1.1rem", fontWeight: 600, color: "#fff" }}>{COURSE_TITLE}</span>
+      <span style={{ fontFamily: "var(--font-serif)", fontSize: "1.1rem", fontWeight: 600, color: "#fff" }}>{COURSE_TITLE}</span>
       <span style={{ fontSize: "0.7rem", color: "var(--mint)", letterSpacing: "0.06em", textTransform: "uppercase", opacity: 0.8 }}>{COURSE_LABEL}</span>
     </nav>
   );
@@ -1254,7 +1254,7 @@ Return JSON for a single re-instruction section:
               <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "var(--gold)", display: "inline-block" }} />
               AI-Powered Learning
             </div>
-            <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: "clamp(1.8rem, 3.5vw, 2.6rem)", fontWeight: 600, color: "var(--text-dark)", lineHeight: 1.2, letterSpacing: "-0.02em", margin: "0 0 14px" }}>
+            <h1 style={{ fontFamily: "var(--font-serif)", fontSize: "clamp(1.8rem, 3.5vw, 2.6rem)", fontWeight: 600, color: "var(--text-dark)", lineHeight: 1.2, letterSpacing: "-0.02em", margin: "0 0 14px" }}>
               What would you like to study today?
             </h1>
             <p style={{ fontSize: "1rem", color: "var(--text-muted)", fontWeight: 400, lineHeight: 1.6, margin: 0 }}>
