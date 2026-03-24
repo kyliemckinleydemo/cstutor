@@ -549,13 +549,51 @@ function NavBar({ view, setView, sessionCount, formulaCount, dueCount }) {
     { id: "review", label: `Review${dueCount ? ` (${dueCount} due)` : ""}`, urgent: dueCount > 0 },
   ];
   return (
-    <div style={{ display: "flex", gap: "6px", marginBottom: "1.75rem", flexWrap: "wrap" }}>
+    <div style={{ display: "flex", gap: "6px", marginBottom: "1.75rem", flexWrap: "wrap", alignItems: "center" }}>
       {tabs.map(t => (
         <button key={t.id} onClick={() => setView(t.id)}
           style={{ padding: "6px 14px", fontSize: "12px", fontWeight: 600, borderRadius: "20px", border: view === t.id ? "none" : "0.5px solid var(--color-border-tertiary)", background: view === t.id ? "#00693e" : "var(--color-background-secondary)", color: view === t.id ? "white" : t.urgent ? "#a32d2d" : "var(--color-text-secondary)", cursor: "pointer" }}>
           {t.label}
         </button>
       ))}
+      <button onClick={() => setView("help")} style={{ marginLeft: "auto", width: "28px", height: "28px", borderRadius: "50%", border: view === "help" ? "none" : "0.5px solid var(--color-border-tertiary)", background: view === "help" ? "#00693e" : "var(--color-background-secondary)", color: view === "help" ? "white" : "var(--color-text-tertiary)", fontSize: "13px", fontWeight: 700, cursor: "pointer", flexShrink: 0 }}>?</button>
+    </div>
+  );
+}
+
+function HelpView() {
+  const Section = ({ title, children }) => (
+    <div style={{ marginBottom: "1.75rem" }}>
+      <div style={{ fontSize: "11px", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "#00693e", marginBottom: "0.75rem" }}>{title}</div>
+      {children}
+    </div>
+  );
+  const Item = ({ label, children }) => (
+    <div style={{ marginBottom: "0.6rem", display: "flex", gap: "10px" }}>
+      <span style={{ fontWeight: 600, fontSize: "13px", minWidth: "120px", flexShrink: 0, color: "var(--color-text-primary)" }}>{label}</span>
+      <span style={{ fontSize: "13px", color: "var(--color-text-secondary)", lineHeight: "1.6" }}>{children}</span>
+    </div>
+  );
+  return (
+    <div style={{ maxWidth: "600px" }}>
+      <Section title="The Study Flow">
+        <Item label="1. Pick a topic">Type anything or click a suggested chip, then hit Start Lesson.</Item>
+        <Item label="2. Read the lesson">4 sections: intuition, mechanics, worked example, pitfalls. Click any bolded term for a deep dive.</Item>
+        <Item label="3. Code examples">Click Show example code under any section for a runnable example. Copy button included.</Item>
+        <Item label="4. Take the quiz">5 questions — conceptual, computational, and synthesis. Show your work.</Item>
+        <Item label="5. Review results">Per-question feedback, strong/weak areas, and a targeted re-explanation of missed concepts.</Item>
+      </Section>
+      <Section title="Navigation">
+        <Item label="History">Log of every completed session with score and weak/strong area tags.</Item>
+        <Item label="Formulas/Defs">Auto-built reference sheet from every lesson. Filter by type, print by category, delete entries with ×.</Item>
+        <Item label="Review">Spaced repetition queue. Wrong answers return in 1 day, partial in 3 days, correct in 30 days. Each card generates a fresh question on the same concept.</Item>
+      </Section>
+      <Section title="Tips">
+        <Item label="Regen button">On any lesson, click ↺ Regen to regenerate a new lesson and quiz on the same topic. History and formulas are preserved.</Item>
+        <Item label="Chat">Available at every phase. Ask follow-up questions, request examples, or say "explain that differently." The tutor knows your full context.</Item>
+        <Item label="Persistence">Completed lessons survive page refresh — you'll land back where you left off. Starting a new topic clears the current session.</Item>
+        <Item label="Formula sheet">Fills automatically as you study. After a few lessons you'll have a printable reference sheet.</Item>
+      </Section>
     </div>
   );
 }
@@ -960,6 +998,7 @@ Return JSON for a single re-instruction section:
       {view === "history" && <HistoryView sessions={sessions} />}
       {view === "formulas" && <FormulasView formulas={formulas} setFormulas={setFormulas} />}
       {view === "review" && <ReviewView flagged={flagged} setFlagged={setFlagged} onDone={() => setView("session")} />}
+      {view === "help" && <HelpView />}
 
       {view === "session" && <PhaseBar phase={phase} />}
 
