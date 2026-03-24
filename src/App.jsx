@@ -330,7 +330,7 @@ function LessonSection({ section, topic }) {
 function buildChatContext(phase, topic, sections, questions, answers, results, followUpText) {
   const parts = [`Topic: "${topic}"`, `Current phase: ${phase}`];
   if (sections?.length) {
-    const summary = sections.map(s => `${s.title}:\n${(s.prose || "").slice(0, 300)}`).join("\n\n");
+    const summary = sections.map(s => `${s.title}:\n${(s.prose || "").slice(0, 1200)}`).join("\n\n");
     parts.push("Lesson content:\n" + summary);
   }
   if (questions?.length) {
