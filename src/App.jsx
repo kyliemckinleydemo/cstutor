@@ -724,7 +724,7 @@ Return JSON with exactly this structure — sections array only, no other keys:
   ]
 }
 
-IMPORTANT: prose must be real paragraph text, not placeholder instructions. keyItems: 2-3 per section, only for sections with formulas or tricky terms, else use [].`;
+IMPORTANT: prose must be real paragraph text, not placeholder instructions. keyItems: always include 2-3 per section — key formulas, terms, or concepts a student must know. Never return an empty array.`;
 
     const [r1, r2, ytVideos] = await Promise.all([
       askJSON([{ role: "user", content: sectionPrompt([
