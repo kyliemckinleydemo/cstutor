@@ -762,7 +762,7 @@ function FormulasView({ formulas, setFormulas }) {
       {/* Add form */}
       {adding && (
         <div style={{ background: "#fff", border: "1.5px solid var(--border)", borderRadius: "14px", padding: "1.5rem", marginBottom: "1.25rem", boxShadow: "0 4px 16px rgba(26,58,42,0.07)" }}>
-          <div style={{ fontSize: "13px", fontWeight: 700, color: "var(--pine)", marginBottom: "1rem", letterSpacing: "0.04em", textTransform: "uppercase", fontSize: "11px" }}>New Entry</div>
+          <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--pine)", marginBottom: "1rem", letterSpacing: "0.04em", textTransform: "uppercase" }}>New Entry</div>
 
           {/* Type toggle */}
           <div style={{ display: "flex", gap: "6px", marginBottom: "1rem" }}>
