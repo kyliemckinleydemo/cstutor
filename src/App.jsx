@@ -569,7 +569,9 @@ function VideoCard({ video }) {
   );
 }
 
-function TopNav({ view, setView, onHome, sessionCount, formulaCount, dueCount, user, onSignOut }) {
+function TopNav({ view, setView, onHome, sessionCount, formulaCount, dueCount, user, onSignOut, savedLessons, onCourseSelect }) {
+  const [coursesOpen, setCoursesOpen] = useState(false);
+  const courseList = Object.entries(savedLessons || {}).sort((a, b) => b[1].savedAt - a[1].savedAt);
   const navLinks = [
     { id: "history", label: `History${sessionCount ? ` (${sessionCount})` : ""}` },
     { id: "formulas", label: `Formulas/Defs${formulaCount ? ` (${formulaCount})` : ""}` },
@@ -599,9 +601,28 @@ function TopNav({ view, setView, onHome, sessionCount, formulaCount, dueCount, u
       {/* Nav links */}
       <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
         <button onClick={onHome}
-          style={{ fontSize: "0.83rem", fontWeight: 600, padding: "7px 18px", background: "var(--gold)", color: "var(--pine)", border: "none", borderRadius: "8px", cursor: "pointer", letterSpacing: "0.02em", boxShadow: "0 2px 8px rgba(200,168,75,0.35)", marginRight: "6px" }}>
+          style={{ fontSize: "0.83rem", fontWeight: 600, padding: "7px 18px", background: "var(--gold)", color: "var(--pine)", border: "none", borderRadius: "8px", cursor: "pointer", letterSpacing: "0.02em", boxShadow: "0 2px 8px rgba(200,168,75,0.35)", marginRight: "2px" }}>
           + New Topic
         </button>
+        {courseList.length > 0 && (
+          <div style={{ position: "relative", marginRight: "6px" }}>
+            {coursesOpen && <div onClick={() => setCoursesOpen(false)} style={{ position: "fixed", inset: 0, zIndex: 99 }} />}
+            <button onClick={() => setCoursesOpen(o => !o)}
+              style={{ fontSize: "0.83rem", fontWeight: 600, padding: "7px 14px", background: coursesOpen ? "rgba(255,255,255,0.18)" : "rgba(255,255,255,0.1)", color: "#fff", border: "1px solid rgba(255,255,255,0.2)", borderRadius: "8px", cursor: "pointer", letterSpacing: "0.02em" }}>
+              My Courses ▾
+            </button>
+            {coursesOpen && (
+              <div style={{ position: "absolute", top: "calc(100% + 8px)", left: 0, zIndex: 200, background: "#fff", border: "1.5px solid var(--border)", borderRadius: "10px", boxShadow: "0 8px 32px rgba(0,0,0,0.18)", minWidth: "240px", maxHeight: "320px", overflowY: "auto" }}>
+                {courseList.map(([t]) => (
+                  <button key={t} onClick={() => { onCourseSelect(t); setCoursesOpen(false); }}
+                    style={{ display: "block", width: "100%", textAlign: "left", padding: "10px 16px", background: "none", border: "none", borderBottom: "1px solid var(--color-border-tertiary)", cursor: "pointer", fontSize: "13px", color: "var(--text-dark)", fontFamily: "var(--font-sans)" }}>
+                    {t}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
         {navLinks.map(t => (
           <button key={t.id} onClick={() => setView(t.id)}
             style={{
@@ -1196,6 +1217,7 @@ export default function App() {
   const [sessions, setSessions] = useState(() => stor.get(`cstutor_${COURSE.id}_sessions`, []));
   const [formulas, setFormulas] = useState(() => stor.get(`cstutor_${COURSE.id}_formulas`, []));
   const [flagged, setFlagged] = useState(() => stor.get(`cstutor_${COURSE.id}_flagged`, []));
+  const [savedLessons, setSavedLessons] = useState(() => stor.get(`cstutor_${COURSE.id}_savedLessons`, {}));
   const [savedSession, setSavedSession] = useState(() => {
     const s = stor.get(`cstutor_${COURSE.id}_current`, null);
     return (s?.phase && s.phase !== "topic") ? s : null;
@@ -1277,6 +1299,7 @@ export default function App() {
   useEffect(() => stor.set(`cstutor_${COURSE.id}_sessions`, sessions), [sessions]);
   useEffect(() => stor.set(`cstutor_${COURSE.id}_formulas`, formulas), [formulas]);
   useEffect(() => stor.set(`cstutor_${COURSE.id}_flagged`, flagged), [flagged]);
+  useEffect(() => stor.set(`cstutor_${COURSE.id}_savedLessons`, savedLessons), [savedLessons]);
 
   const continueSession = () => {
     const s = savedSession;
@@ -1362,6 +1385,13 @@ IMPORTANT: prose must be real paragraph text, not placeholder instructions. keyI
       });
     }
     setPhase("learn");
+    // Save lesson content for My Courses (keep last 30)
+    setSavedLessons(prev => {
+      const next = { ...prev, [topic]: { sections: allSecs, savedAt: Date.now() } };
+      const keys = Object.keys(next).sort((a, b) => next[b].savedAt - next[a].savedAt);
+      keys.slice(30).forEach(k => delete next[k]);
+      return next;
+    });
     // Track lesson start (fire-and-forget, once per session)
     if (user && !lessonTrackedRef.current) {
       lessonTrackedRef.current = true;
@@ -1493,7 +1523,13 @@ Return JSON for a single re-instruction section:
       <div style={{ position: "fixed", bottom: "-80px", left: "-100px", width: "400px", height: "400px", borderRadius: "50%", background: "radial-gradient(circle, rgba(200,168,75,0.09) 0%, transparent 70%)", pointerEvents: "none", zIndex: 0 }} />
 
       <div style={{ position: "relative", zIndex: 1 }}>
-        <TopNav view={view} setView={setView} onHome={reset} sessionCount={sessions.length} formulaCount={formulas.length} dueCount={dueCount} user={user} onSignOut={signOut} />
+        <TopNav view={view} setView={setView} onHome={reset} sessionCount={sessions.length} formulaCount={formulas.length} dueCount={dueCount} user={user} onSignOut={signOut} savedLessons={savedLessons} onCourseSelect={t => {
+          const saved = savedLessons[t];
+          if (!saved) return;
+          setTopic(t); setSections(saved.sections); setQuestions([]); setAnswers({}); setResults(null);
+          setFollowUpSections([]); setChatHistory([]); setPhase("learn"); setView("session");
+          setSavedSession(null); sessionSavedRef.current = false; adminTrackedRef.current = false; lessonTrackedRef.current = true;
+        }} />
         {view === "session" && <PhaseBar phase={phase} />}
         <div style={{ maxWidth: "1100px", margin: "0 auto", padding: "2rem 2.5rem 3rem", color: "var(--text-dark)" }}>
       {view === "history" && <HistoryView sessions={sessions} />}
