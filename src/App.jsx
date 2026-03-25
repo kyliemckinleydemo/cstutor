@@ -1376,7 +1376,7 @@ Return JSON for a single re-instruction section:
 
           {/* Suggested topics */}
           <div style={{ animation: "fadeUp 0.6s 0.15s ease both" }}>
-            <p style={{ fontSize: "0.72rem", fontWeight: 700, color: "var(--text-muted)", letterSpacing: "0.1em", textTransform: "uppercase", margin: "0 0 16px" }}>Suggested Topics</p>
+            <p style={{ fontSize: "0.72rem", fontWeight: 700, color: "var(--text-muted)", letterSpacing: "0.1em", textTransform: "uppercase", margin: "0 0 16px" }}>Suggested topics (click to use)</p>
             <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
               {SUGGESTED.map((s, i) => (
                 <button key={s} onClick={() => setTopic(s)}
