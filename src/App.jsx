@@ -564,8 +564,8 @@ function TopNav({ view, setView, onHome, sessionCount, formulaCount, dueCount, u
     }}>
       {/* Brand */}
       <button onClick={onHome} style={{ display: "flex", alignItems: "center", gap: "12px", background: "none", border: "none", cursor: "pointer", padding: 0, flexShrink: 0 }}>
-        <div style={{ width: "54px", height: "54px", borderRadius: "50%", background: "var(--gold)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-          <img src="https://communications.dartmouth.edu/sites/communications/files/2024-07/lone-pine-rev.png" alt="Dartmouth" style={{ width: "48px", height: "48px", objectFit: "contain" }} />
+        <div style={{ width: "68px", height: "68px", borderRadius: "50%", background: "var(--gold)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+          <img src="https://communications.dartmouth.edu/sites/communications/files/2024-07/lone-pine-rev.png" alt="Dartmouth" style={{ width: "60px", height: "60px", objectFit: "contain" }} />
         </div>
         <div style={{ textAlign: "left" }}>
           <div style={{ fontFamily: "var(--font-serif)", fontSize: "1.1rem", fontWeight: 600, color: "#fff", letterSpacing: "0.01em", lineHeight: 1.2 }}>{COURSE_TITLE}</div>
@@ -1284,8 +1284,8 @@ Return JSON for a single re-instruction section:
 
   const navBar = (
     <nav style={{ position: "sticky", top: 0, zIndex: 100, background: "var(--pine)", display: "flex", alignItems: "center", gap: "12px", padding: "0 2.5rem", height: "64px", boxShadow: "0 1px 0 rgba(255,255,255,0.06), 0 4px 24px rgba(0,0,0,0.25)" }}>
-      <div style={{ width: "54px", height: "54px", borderRadius: "50%", background: "var(--gold)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <img src="https://communications.dartmouth.edu/sites/communications/files/2024-07/lone-pine-rev.png" alt="Dartmouth" style={{ width: "48px", height: "48px", objectFit: "contain" }} />
+      <div style={{ width: "68px", height: "68px", borderRadius: "50%", background: "var(--gold)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <img src="https://communications.dartmouth.edu/sites/communications/files/2024-07/lone-pine-rev.png" alt="Dartmouth" style={{ width: "60px", height: "60px", objectFit: "contain" }} />
       </div>
       <span style={{ fontFamily: "var(--font-serif)", fontSize: "1.1rem", fontWeight: 600, color: "#fff" }}>{COURSE_TITLE}</span>
       <span style={{ fontSize: "0.7rem", color: "var(--mint)", letterSpacing: "0.06em", textTransform: "uppercase", opacity: 0.8 }}>{COURSE_LABEL}</span>
