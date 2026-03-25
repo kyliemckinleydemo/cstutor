@@ -573,7 +573,7 @@ function TopNav({ view, setView, onHome, sessionCount, formulaCount, dueCount, u
     { id: "history", label: `History${sessionCount ? ` (${sessionCount})` : ""}` },
     { id: "formulas", label: `Formulas/Defs${formulaCount ? ` (${formulaCount})` : ""}` },
     { id: "review", label: `Review${dueCount ? ` (${dueCount})` : ""}`, urgent: dueCount > 0 },
-    { id: "help", label: "?" },
+    { id: "help", label: "Help" },
     ...(isAdmin(user?.email) ? [{ id: "admin", label: "Admin" }] : []),
   ];
   return (
