@@ -431,11 +431,12 @@ function ChatPanel({ topic, sections, questions, answers, results, followUpText,
   useEffect(() => {
     if (!sections.length || !topic) return;
     setLearnPrompts(null);
-    const titles = sections.map(s => s.title).join(", ");
-    askJSON([{ role: "user", content: `A student just read a lesson on "${topic}" covering: ${titles}. Write 4 short follow-up questions they might ask — specific to "${topic}", not generic. Under 8 words each. Return a JSON array of 4 strings.` }])
+    const keyTerms = sections.flatMap(s => (s.keyItems || []).map(k => k.label)).slice(0, 8).join(", ");
+    const snippet = (sections[0]?.prose || "").slice(0, 200);
+    askJSON([{ role: "user", content: `A student just finished a lesson on "${topic}". Key terms covered: ${keyTerms || "none"}. Lesson excerpt: "${snippet}". Generate 4 follow-up questions they might click to ask next. Rules: (1) Every question must name "${topic}" or a specific term from the lesson — no generic questions like "Walk me through the intuition again". (2) Under 9 words each. (3) Mix question types: one asking why something works, one asking about a specific term, one asking for an example, one connecting to a real use case. Return a JSON array of exactly 4 strings.` }])
       .then(raw => {
         try {
-          const arr = JSON.parse(typeof raw === "string" ? raw : JSON.stringify(raw));
+          const arr = parseJSON(typeof raw === "string" ? raw : JSON.stringify(raw));
           if (Array.isArray(arr) && arr.length >= 4) setLearnPrompts(arr.slice(0, 4));
         } catch {}
       })
