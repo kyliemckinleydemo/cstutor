@@ -37,7 +37,7 @@ Every lesson has 4 sections:
 
 **YouTube videos:** Two highly-viewed videos related to your topic appear below the lesson.
 
-**Chat:** Ask Darby anything in the chat box below the lesson. It knows exactly what you're reading and where you are in the flow. Use the quick-prompt chips to get started, or type your own question.
+**Chat:** Ask Darby anything in the chat box below the lesson. It knows exactly what you're reading and where you are in the flow. Quick-prompt chips are generated from your specific lesson content — they'll reference actual terms and concepts covered. Code blocks in responses are rendered with syntax highlighting and a copy button.
 
 **Regen:** Click **↺ Regen** in the lesson header to regenerate a fresh lesson and quiz for the same topic. A confirmation shows what will happen — your history, formula sheet, and review queue are not affected.
 
@@ -67,6 +67,10 @@ Click **Study Another Topic** to start fresh.
 
 ## Navigation
 
+### My Courses
+
+A dropdown listing every topic you've generated a lesson for, most recent first. Click any topic to instantly restore the full saved lesson and jump straight to reading — no re-generation needed.
+
 ### History
 
 A log of every completed session with date, topic, score, and strong/weak area tags.
@@ -94,7 +98,7 @@ The nav badge shows how many questions are due today.
 
 ### Help
 
-This guide, accessible from the **?** button in the nav.
+This guide, accessible from the **Help** button in the nav.
 
 ---
 
@@ -102,6 +106,7 @@ This guide, accessible from the **?** button in the nav.
 
 - The formula sheet fills up fast — a few lessons gives you a printable cheat sheet
 - Check Review daily before studying new material; it only takes a few minutes
+- Use **My Courses** to jump back into any topic you've studied — the lesson loads instantly
 - Use the chat freely — ask "explain that differently" or "give me another example" at any point
 - If a lesson skips something you needed, ask Darby directly in the chat
 - You can add your own formulas and definitions manually — useful for lecture notes or textbook terms
