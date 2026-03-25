@@ -422,10 +422,25 @@ function ChatPanel({ topic, sections, questions, answers, results, followUpText,
   const initials = displayName.slice(0, 1).toUpperCase();
   const [input, setInput] = useState("");
   const [thinking, setThinking] = useState(false);
+  const [learnPrompts, setLearnPrompts] = useState(null);
   const bottomRef = useRef(null);
   const inputRef = useRef(null);
 
   useEffect(() => { if (bottomRef.current) bottomRef.current.scrollIntoView({ behavior: "smooth" }); }, [history, thinking]);
+
+  useEffect(() => {
+    if (!sections.length || !topic) return;
+    setLearnPrompts(null);
+    const titles = sections.map(s => s.title).join(", ");
+    askJSON([{ role: "user", content: `A student just read a lesson on "${topic}" covering: ${titles}. Write 4 short follow-up questions they might ask — specific to "${topic}", not generic. Under 8 words each. Return a JSON array of 4 strings.` }])
+      .then(raw => {
+        try {
+          const arr = JSON.parse(typeof raw === "string" ? raw : JSON.stringify(raw));
+          if (Array.isArray(arr) && arr.length >= 4) setLearnPrompts(arr.slice(0, 4));
+        } catch {}
+      })
+      .catch(() => {});
+  }, [topic, sections]);
 
   const send = async () => {
     const q = input.trim();
@@ -444,9 +459,9 @@ function ChatPanel({ topic, sections, questions, answers, results, followUpText,
   };
 
   const QUICK = {
-    learn:   COURSE.id === "cosc10"
+    learn: learnPrompts || (COURSE.id === "cosc10"
       ? ["Give me another worked example", "How is this used in Java?", "Walk me through the intuition again", "What's the most common mistake here?"]
-      : ["Give me another worked example", "Why does this come up in ML?", "Walk me through the intuition again", "What's the most common mistake here?"],
+      : ["Give me another worked example", "Why does this come up in ML?", "Walk me through the intuition again", "What's the most common mistake here?"]),
     quiz:    COURSE.id === "cosc10"
       ? ["I'm not sure how to approach this", "Can you remind me of the syntax?", "What should I be showing in my work?", "Walk me through the intuition again"]
       : ["I'm not sure how to approach this", "Can you remind me of a related formula?", "What should I be showing in my work?", "Walk me through the intuition again"],
