@@ -973,7 +973,6 @@ function AdminView({ user }) {
 
       {Object.entries(data).map(([courseId, courseData]) => {
         const { total, weekly } = courseData;
-        if (!total.sessions && !weekly.sessions) return null;
         return (
           <div key={courseId} style={{ marginBottom: "3rem" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "1.25rem" }}>
