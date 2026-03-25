@@ -7,7 +7,7 @@ const COURSES = {
   cosc77: {
     id: "cosc77",
     label: "Dartmouth COSC 77",
-    title: "Tutor Agent",
+    title: "Darby",
     subtitle: "Deep lessons · Drilldown on any formula · Adaptive quizzing",
     codeLanguage: "Python",
     system: `You are a patient, thorough tutor for a Dartmouth CS junior taking COSC 77 (Mathematical Foundations of Machine Learning). Your job is to build genuine understanding — not just cover material. Assume the student is smart but may not have deep background in this specific topic yet. Start from first principles. Use plain English before introducing notation. Write in full, connected paragraphs that flow naturally — not bullet points and not terse outlines. Explanations should feel like a knowledgeable friend explaining something carefully, not a textbook. Mathematical notation in plain text: A^T, ||v||, sum_{i=1}^n, grad_theta, x_i, lambda, sigma. Always explain *why* something is true or works before showing *how* to apply it.`,
@@ -21,7 +21,7 @@ const COURSES = {
   cosc10: {
     id: "cosc10",
     label: "Dartmouth COSC 10",
-    title: "Tutor Agent",
+    title: "Darby",
     subtitle: "Clear explanations · Code examples · Adaptive quizzing",
     codeLanguage: "Java",
     system: `You are a patient, thorough tutor for a Dartmouth student taking COSC 10 (Problem Solving via Object-Oriented Programming). Your job is to build genuine understanding — not just cover material. Assume the student is relatively new to computer science. Start from first principles using concrete, relatable examples before introducing technical terms or code. Write in full, connected paragraphs that flow naturally — not bullet points and not terse outlines. Explanations should feel like a knowledgeable friend explaining something carefully, not a textbook. All code examples should be in Java. Always explain *why* something works before showing *how* to use it. Connect every concept to real programs a student might actually write or use.`,
@@ -491,7 +491,7 @@ function ChatPanel({ topic, sections, questions, answers, results, followUpText,
                 <span style={{ fontSize: "9px", fontWeight: 700, color: m.from === "user" ? "var(--pine)" : "var(--text-muted)" }}>{m.from === "user" ? initials : "AI"}</span>
               </div>
               <div style={{ flex: 1, maxWidth: "88%" }}>
-                <div style={{ fontSize: "11px", color: "var(--text-muted)", marginBottom: "3px", textAlign: m.from === "user" ? "right" : "left" }}>{m.from === "user" ? displayName : "Tutor"}</div>
+                <div style={{ fontSize: "11px", color: "var(--text-muted)", marginBottom: "3px", textAlign: m.from === "user" ? "right" : "left" }}>{m.from === "user" ? displayName : "Darby"}</div>
                 <div style={{ background: m.from === "user" ? "rgba(26,58,42,0.09)" : "var(--cream)", borderRadius: m.from === "user" ? "12px 12px 2px 12px" : "12px 12px 12px 2px", padding: "10px 14px" }}>
                   <ProseParagraphs text={m.text} size="13px" />
                 </div>
@@ -986,7 +986,7 @@ function SignInView({ onSignedIn }) {
             </div>
           </div>
           <div style={{ fontSize: "18px", opacity: 0.9, lineHeight: 1.5, marginBottom: "2.5rem", fontWeight: 400 }}>
-            An AI study partner built for your course.<br />
+            Your AI study partner for Dartmouth CS.<br />
             <span style={{ opacity: 0.7, fontSize: "15px" }}>{COURSE_SUBTITLE}</span>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", textAlign: "left", maxWidth: "520px", margin: "0 auto" }}>

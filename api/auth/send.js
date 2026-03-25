@@ -20,19 +20,19 @@ export default async function handler(req, res) {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      from: "Tutor Agent <onboarding@resend.dev>",
+      from: "Darby <onboarding@resend.dev>",
       to: email,
-      subject: "Your Tutor Agent sign-in link",
+      subject: "Your Darby sign-in link",
       html: `
         <div style="font-family:system-ui,sans-serif;max-width:480px;margin:0 auto;padding:2rem">
           <div style="margin-bottom:1.5rem">
             <span style="display:inline-flex;align-items:center;gap:6px">
-              <span style="width:8px;height:8px;border-radius:50%;background:#00693e;display:inline-block"></span>
-              <strong style="font-size:14px">Tutor Agent</strong>
+              <span style="width:8px;height:8px;border-radius:50%;background:#1a3a2a;display:inline-block"></span>
+              <strong style="font-size:14px">Darby</strong>
             </span>
           </div>
           <p style="font-size:15px;margin:0 0 1.5rem">Click below to sign in. This link expires in 15 minutes.</p>
-          <a href="${loginUrl}" style="display:inline-block;background:#00693e;color:white;padding:11px 24px;border-radius:6px;text-decoration:none;font-weight:600;font-size:14px">Sign in →</a>
+          <a href="${loginUrl}" style="display:inline-block;background:#1a3a2a;color:white;padding:11px 24px;border-radius:6px;text-decoration:none;font-weight:600;font-size:14px">Sign in →</a>
           <p style="margin-top:1.5rem;font-size:12px;color:#888">Or copy: ${loginUrl}</p>
           <p style="font-size:12px;color:#bbb;margin-top:2rem">If you didn't request this, you can ignore it.</p>
         </div>
