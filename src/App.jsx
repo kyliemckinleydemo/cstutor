@@ -2,6 +2,8 @@ import { useState, useRef, useEffect } from "react";
 
 const API = "/api/proxy";
 const MODEL = "claude-sonnet-4-20250514";
+const ADMINS = ["john@greatfallsventures.com", "kylie.k.mckinley.27@dartmouth.edu"];
+const isAdmin = email => ADMINS.includes((email || "").toLowerCase());
 
 const COURSES = {
   cosc77: {
@@ -553,6 +555,7 @@ function TopNav({ view, setView, onHome, sessionCount, formulaCount, dueCount, u
     { id: "formulas", label: `Formulas/Defs${formulaCount ? ` (${formulaCount})` : ""}` },
     { id: "review", label: `Review${dueCount ? ` (${dueCount})` : ""}`, urgent: dueCount > 0 },
     { id: "help", label: "?" },
+    ...(isAdmin(user?.email) ? [{ id: "admin", label: "Admin" }] : []),
   ];
   return (
     <nav style={{
@@ -925,6 +928,138 @@ const Btn = ({ label, onClick, primary = true, disabled = false }) => (
   </button>
 );
 
+const COURSE_LABELS = { cosc77: "COSC 77 — Machine Learning", cosc10: "COSC 10 — OOP" };
+
+function AdminView({ user }) {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    fetch("/api/admin/report", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sessionToken: user.sessionToken }),
+    })
+      .then(r => r.ok ? r.json() : Promise.reject(r.status))
+      .then(setData)
+      .catch(() => setError("Could not load report."))
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) return <div style={{ padding: "4rem", textAlign: "center" }}><LoadDots /></div>;
+  if (error) return <div style={{ padding: "2rem", color: "var(--color-text-danger)" }}>{error}</div>;
+
+  const thStyle = { padding: "8px 12px", fontSize: "11px", fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em", textAlign: "left", borderBottom: "1px solid var(--border)", whiteSpace: "nowrap" };
+  const tdStyle = { padding: "8px 12px", fontSize: "13px", color: "var(--text-dark)", borderBottom: "1px solid var(--color-border-tertiary)", verticalAlign: "middle" };
+  const scoreColor = p => p == null ? "var(--text-muted)" : p >= 80 ? "var(--pine)" : p >= 60 ? "#b07a10" : "#a32d2d";
+  const scoreBg = p => p == null ? "transparent" : p >= 80 ? "rgba(26,58,42,0.09)" : p >= 60 ? "#faeeda" : "#fcebeb";
+
+  const StatBox = ({ label, value, sub }) => (
+    <div style={{ background: "#fff", border: "1.5px solid var(--border)", borderRadius: "12px", padding: "1.25rem 1.5rem", minWidth: "130px" }}>
+      <div style={{ fontSize: "28px", fontWeight: 800, color: "var(--pine)", letterSpacing: "-0.02em", lineHeight: 1 }}>{value}</div>
+      <div style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-dark)", marginTop: "5px" }}>{label}</div>
+      {sub && <div style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "2px" }}>{sub}</div>}
+    </div>
+  );
+
+  return (
+    <div>
+      <div style={{ marginBottom: "2rem" }}>
+        <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--text-muted)", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: "4px" }}>Admin</div>
+        <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "1.8rem", fontWeight: 600, color: "var(--text-dark)", margin: "0 0 4px", letterSpacing: "-0.01em" }}>Usage Report</h2>
+        <p style={{ margin: 0, fontSize: "13px", color: "var(--text-muted)" }}>All courses · Aggregate totals and last 7 days</p>
+      </div>
+
+      {Object.entries(data).map(([courseId, courseData]) => {
+        const { total, weekly } = courseData;
+        if (!total.sessions && !weekly.sessions) return null;
+        return (
+          <div key={courseId} style={{ marginBottom: "3rem" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "1.25rem" }}>
+              <div style={{ width: "3px", height: "18px", background: "var(--pine)", borderRadius: "2px" }} />
+              <span style={{ fontSize: "15px", fontWeight: 700, color: "var(--text-dark)" }}>{COURSE_LABELS[courseId] || courseId}</span>
+            </div>
+
+            {/* Stats row */}
+            <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", marginBottom: "1.75rem" }}>
+              <StatBox label="Total sessions" value={total.sessions} />
+              <StatBox label="Unique students" value={total.uniqueStudents} sub="all time" />
+              <StatBox label="Sessions this week" value={weekly.sessions} />
+              <StatBox label="Students this week" value={weekly.uniqueStudents} />
+            </div>
+
+            {/* Topics table */}
+            {total.topTopics.length > 0 && (
+              <div style={{ background: "#fff", border: "1.5px solid var(--border)", borderRadius: "12px", overflow: "hidden", marginBottom: "1.5rem" }}>
+                <div style={{ padding: "1rem 1.25rem 0.75rem", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "baseline", gap: "10px" }}>
+                  <span style={{ fontSize: "13px", fontWeight: 700, color: "var(--text-dark)" }}>Topics studied</span>
+                  <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>by frequency</span>
+                </div>
+                <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                  <thead>
+                    <tr style={{ background: "var(--cream)" }}>
+                      <th style={thStyle}>Topic</th>
+                      <th style={{ ...thStyle, textAlign: "right" }}>Total</th>
+                      <th style={{ ...thStyle, textAlign: "right" }}>This week</th>
+                      <th style={{ ...thStyle, textAlign: "right" }}>Avg score</th>
+                      <th style={{ ...thStyle, textAlign: "right" }}>Low (&lt;70%)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {total.topTopics.map((t, i) => {
+                      const w = weekly.topTopics.find(x => x.topic === t.topic);
+                      return (
+                        <tr key={i} style={{ background: i % 2 === 0 ? "#fff" : "var(--warm-white)" }}>
+                          <td style={tdStyle}>{t.topic}</td>
+                          <td style={{ ...tdStyle, textAlign: "right", fontWeight: 600 }}>{t.count}</td>
+                          <td style={{ ...tdStyle, textAlign: "right", color: w?.count ? "var(--pine)" : "var(--text-muted)" }}>{w?.count || "—"}</td>
+                          <td style={{ ...tdStyle, textAlign: "right" }}>
+                            {t.avgScore != null
+                              ? <span style={{ display: "inline-block", padding: "2px 8px", borderRadius: "20px", background: scoreBg(t.avgScore), color: scoreColor(t.avgScore), fontWeight: 600, fontSize: "12px" }}>{t.avgScore}%</span>
+                              : <span style={{ color: "var(--text-muted)" }}>—</span>}
+                          </td>
+                          <td style={{ ...tdStyle, textAlign: "right", color: t.lowCount > 0 ? "#a32d2d" : "var(--text-muted)" }}>{t.lowCount || "—"}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {/* Weak areas */}
+            {total.topWeakAreas.length > 0 && (
+              <div style={{ background: "#fff", border: "1.5px solid var(--border)", borderRadius: "12px", overflow: "hidden" }}>
+                <div style={{ padding: "1rem 1.25rem 0.75rem", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "baseline", gap: "10px" }}>
+                  <span style={{ fontSize: "13px", fontWeight: 700, color: "var(--text-dark)" }}>Struggling with</span>
+                  <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>concepts most often marked weak</span>
+                </div>
+                <div style={{ padding: "1rem 1.25rem", display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                  {total.topWeakAreas.map((w, i) => {
+                    const weekly_w = weekly.topWeakAreas.find(x => x.area === w.area);
+                    return (
+                      <div key={i} style={{ display: "flex", alignItems: "center", gap: "8px", background: "var(--cream)", border: "1.5px solid var(--border)", borderRadius: "100px", padding: "6px 14px" }}>
+                        <span style={{ fontSize: "13px", color: "var(--text-dark)", fontWeight: 500 }}>{w.area}</span>
+                        <span style={{ fontSize: "11px", fontWeight: 700, color: "#a32d2d" }}>{w.count}×</span>
+                        {weekly_w?.count > 0 && <span style={{ fontSize: "10px", color: "var(--text-muted)" }}>({weekly_w.count} this wk)</span>}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {total.sessions === 0 && (
+              <div style={{ color: "var(--text-muted)", fontSize: "14px", padding: "1rem 0" }}>No sessions recorded yet for this course.</div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 function SignInView({ onSignedIn }) {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
@@ -1047,6 +1182,7 @@ export default function App() {
     return (s?.phase && s.phase !== "topic") ? s : null;
   });
   const sessionSavedRef = useRef(false);
+  const adminTrackedRef = useRef(false);
 
   // Auth
   const [user, setUser] = useState(null);
@@ -1155,6 +1291,7 @@ export default function App() {
   const doRegen = () => {
     setConfirmRegen(false);
     sessionSavedRef.current = false;
+    adminTrackedRef.current = false;
     setAnswers({}); setResults(null); setFollowUpSections([]); setChatHistory([]); setError("");
     doLesson();
   };
@@ -1223,6 +1360,22 @@ IMPORTANT: prose must be real paragraph text, not placeholder instructions. keyI
     }]);
     const parsed = parseJSON(raw);
     setResults(parsed);
+    // Track analytics (fire-and-forget, first grade only)
+    if (user && !adminTrackedRef.current) {
+      adminTrackedRef.current = true;
+      fetch("/api/admin/track", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sessionToken: user.sessionToken,
+          courseId: COURSE.id,
+          topic,
+          pct: Math.round((parsed.score / parsed.total) * 100),
+          weakAreas: parsed.weakAreas || [],
+          strongAreas: parsed.strongAreas || [],
+        }),
+      }).catch(() => {});
+    }
     // Flag wrong/partial questions for spaced repetition
     const newFlagged = (parsed.results || [])
       .map((r, i) => ({ r, q: questions[i] }))
@@ -1271,6 +1424,7 @@ Return JSON for a single re-instruction section:
 
   const reset = () => {
     sessionSavedRef.current = false;
+    adminTrackedRef.current = false;
     setSavedSession(null);
     stor.set(`cstutor_${COURSE.id}_current`, null);
     setView("session"); setPhase("topic"); setTopic(""); setSections([]); setQuestions([]);
@@ -1315,6 +1469,7 @@ Return JSON for a single re-instruction section:
       {view === "formulas" && <FormulasView formulas={formulas} setFormulas={setFormulas} />}
       {view === "review" && <ReviewView flagged={flagged} setFlagged={setFlagged} onDone={() => setView("session")} />}
       {view === "help" && <HelpView />}
+      {view === "admin" && <AdminView user={user} />}
 
       {view === "session" && error && (
         <div style={{ background: "var(--color-background-danger)", border: "0.5px solid var(--color-border-danger)", borderRadius: "var(--border-radius-md)", padding: "0.75rem 1rem", marginBottom: "1rem", fontSize: "13px", color: "var(--color-text-danger)" }}>{error}</div>
