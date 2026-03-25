@@ -1182,6 +1182,7 @@ export default function App() {
   });
   const sessionSavedRef = useRef(false);
   const adminTrackedRef = useRef(false);
+  const lessonTrackedRef = useRef(false);
 
   // Auth
   const [user, setUser] = useState(null);
@@ -1291,6 +1292,7 @@ export default function App() {
     setConfirmRegen(false);
     sessionSavedRef.current = false;
     adminTrackedRef.current = false;
+    lessonTrackedRef.current = false;
     setAnswers({}); setResults(null); setFollowUpSections([]); setChatHistory([]); setError("");
     doLesson();
   };
@@ -1340,6 +1342,15 @@ IMPORTANT: prose must be real paragraph text, not placeholder instructions. keyI
       });
     }
     setPhase("learn");
+    // Track lesson start (fire-and-forget, once per session)
+    if (user && !lessonTrackedRef.current) {
+      lessonTrackedRef.current = true;
+      fetch("/api/admin/track", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionToken: user.sessionToken, courseId: COURSE.id, topic }),
+      }).catch(() => {});
+    }
   }, "Building your lesson…"); };
 
   const doQuiz = () => wrap(async () => {
@@ -1424,6 +1435,7 @@ Return JSON for a single re-instruction section:
   const reset = () => {
     sessionSavedRef.current = false;
     adminTrackedRef.current = false;
+    lessonTrackedRef.current = false;
     setSavedSession(null);
     stor.set(`cstutor_${COURSE.id}_current`, null);
     setView("session"); setPhase("topic"); setTopic(""); setSections([]); setQuestions([]);
