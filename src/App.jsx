@@ -148,18 +148,39 @@ function Inline({ text }) {
   );
 }
 
+function CodeBlock({ lang, code }) {
+  const [copied, setCopied] = useState(false);
+  const copy = () => { navigator.clipboard.writeText(code).then(() => { setCopied(true); setTimeout(() => setCopied(false), 1500); }); };
+  return (
+    <div style={{ margin: "0.75rem 0 1.1rem", borderRadius: "8px", overflow: "hidden", border: "1.5px solid rgba(255,255,255,0.08)", boxShadow: "0 2px 8px rgba(0,0,0,0.15)" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "#1a2e20", padding: "5px 12px" }}>
+        <span style={{ fontSize: "11px", fontWeight: 600, color: "var(--mint)", letterSpacing: "0.05em", textTransform: "lowercase" }}>{lang || "code"}</span>
+        <button onClick={copy} style={{ fontSize: "10px", fontWeight: 600, color: copied ? "var(--mint)" : "rgba(255,255,255,0.4)", background: "none", border: "none", cursor: "pointer", padding: "2px 6px" }}>{copied ? "Copied!" : "Copy"}</button>
+      </div>
+      <pre style={{ margin: 0, padding: "14px 16px", background: "#1e2a22", overflowX: "auto", fontSize: "12.5px", lineHeight: "1.7", fontFamily: "var(--font-mono, 'Menlo', 'Monaco', monospace)", color: "#e8f0ea", whiteSpace: "pre" }}>
+        <code>{code.replace(/\n$/, "")}</code>
+      </pre>
+    </div>
+  );
+}
+
 function ProseParagraphs({ text, size }) {
   if (!text) return null;
+  const segments = text.split(/(```[\w]*\n[\s\S]*?```)/g);
   return (
     <div>
-      {text.split(/\n\n+/).map((para, i) => {
-        const t = para.trim();
-        if (!t) return null;
-        return (
-          <p key={i} style={{ margin: "0 0 1.1rem", lineHeight: "1.88", fontSize: size || "15px", color: "var(--color-text-primary)" }}>
-            <Inline text={t} />
-          </p>
-        );
+      {segments.map((seg, i) => {
+        const codeMatch = seg.match(/^```([\w]*)\n([\s\S]*?)```$/);
+        if (codeMatch) return <CodeBlock key={i} lang={codeMatch[1]} code={codeMatch[2]} />;
+        return seg.split(/\n\n+/).map((para, j) => {
+          const t = para.trim();
+          if (!t) return null;
+          return (
+            <p key={`${i}-${j}`} style={{ margin: "0 0 1.1rem", lineHeight: "1.88", fontSize: size || "15px", color: "var(--color-text-primary)" }}>
+              <Inline text={t} />
+            </p>
+          );
+        });
       })}
     </div>
   );
