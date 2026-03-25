@@ -444,8 +444,12 @@ function ChatPanel({ topic, sections, questions, answers, results, followUpText,
   };
 
   const QUICK = {
-    learn:   ["Give me another worked example", "Why does this come up in ML?", "Walk me through the intuition again", "What's the most common mistake here?"],
-    quiz:    ["I'm not sure how to approach this", "Can you remind me of a related formula?", "What should I be showing in my work?", "Walk me through the intuition again"],
+    learn:   COURSE.id === "cosc10"
+      ? ["Give me another worked example", "How is this used in Java?", "Walk me through the intuition again", "What's the most common mistake here?"]
+      : ["Give me another worked example", "Why does this come up in ML?", "Walk me through the intuition again", "What's the most common mistake here?"],
+    quiz:    COURSE.id === "cosc10"
+      ? ["I'm not sure how to approach this", "Can you remind me of the syntax?", "What should I be showing in my work?", "Walk me through the intuition again"]
+      : ["I'm not sure how to approach this", "Can you remind me of a related formula?", "What should I be showing in my work?", "Walk me through the intuition again"],
     grade:   ["Why did I get that wrong?", "Explain Q" + (results?.results?.findIndex(r => r.score < 1) + 1 || 1) + " to me", "What's the right way to think about this?", "How do I avoid this mistake next time?"],
     followup:["Can you give another example of this?", "I'm still confused about the formula", "How does this connect to the lesson?", "What would a full exam answer look like?"],
     done:    ["Summarize what I should remember", "What should I study next?", "Give me one more practice problem"],
