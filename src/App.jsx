@@ -1360,7 +1360,7 @@ Return JSON for a single re-instruction section:
           {/* Search card */}
           <div style={{ background: "#fff", border: "1.5px solid var(--border)", borderRadius: "20px", padding: "28px 32px 24px", boxShadow: "0 8px 32px rgba(26,58,42,0.08), 0 2px 8px rgba(26,58,42,0.04)", marginBottom: "3rem", animation: "fadeUp 0.6s 0.1s ease both" }}>
             <div style={{ fontSize: "0.78rem", fontWeight: 600, color: "var(--text-muted)", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: "12px" }}>
-              {savedSession ? "Or Start a New Topic" : "Choose a Topic"}
+              {savedSession ? "Or start a new topic" : "Enter a topic"}
             </div>
             <div style={{ display: "flex", gap: "12px" }}>
               <input type="text" value={topic} onChange={e => setTopic(e.target.value)} onKeyDown={e => e.key === "Enter" && topic.trim() && doLesson()}
