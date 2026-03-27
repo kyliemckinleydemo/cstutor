@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 
 const API = "/api/proxy";
-const MODEL = "claude-sonnet-4-20250514";
+const MODEL = "claude-sonnet-4-6";
 const ADMINS = ["john@greatfallsventures.com", "kylie.k.mckinley.27@dartmouth.edu"];
 const isAdmin = email => ADMINS.includes((email || "").toLowerCase());
 
@@ -39,16 +39,18 @@ const COURSES = {
 const COURSE = COURSES[import.meta.env.VITE_COURSE_ID] || COURSES.cosc77;
 const { system: SYSTEM, suggested: SUGGESTED, label: COURSE_LABEL, title: COURSE_TITLE, subtitle: COURSE_SUBTITLE, codeLanguage: CODE_LANG } = COURSE;
 
-async function callAPI(messages, system, maxTokens = 1500, attempt = 0) {
+async function callAPI(messages, system, maxTokens = 1500, attempt = 0, json = false) {
+  const body = { model: MODEL, max_tokens: maxTokens, system, messages };
+  if (json) body.output_config = { format: { type: "json_object" } };
   const res = await fetch(API, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ model: MODEL, max_tokens: maxTokens, system, messages }),
+    body: JSON.stringify(body),
   });
   if (res.status === 429 && attempt < 3) {
     const wait = (attempt + 1) * 8000;
     await new Promise(r => setTimeout(r, wait));
-    return callAPI(messages, system, maxTokens, attempt + 1);
+    return callAPI(messages, system, maxTokens, attempt + 1, json);
   }
   if (!res.ok) throw new Error("API error " + res.status);
   const d = await res.json();
@@ -56,8 +58,8 @@ async function callAPI(messages, system, maxTokens = 1500, attempt = 0) {
 }
 
 async function askJSON(messages, extra) {
-  const sys = SYSTEM + " " + (extra || "") + " Respond ONLY with raw valid JSON — no markdown fences, no preamble, no trailing text after the closing brace or bracket.";
-  return callAPI(messages, sys, 1500);
+  const sys = SYSTEM + (extra ? " " + extra : "");
+  return callAPI(messages, sys, 1500, 0, true);
 }
 
 async function askProse(messages) {
