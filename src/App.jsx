@@ -39,18 +39,16 @@ const COURSES = {
 const COURSE = COURSES[import.meta.env.VITE_COURSE_ID] || COURSES.cosc77;
 const { system: SYSTEM, suggested: SUGGESTED, label: COURSE_LABEL, title: COURSE_TITLE, subtitle: COURSE_SUBTITLE, codeLanguage: CODE_LANG } = COURSE;
 
-async function callAPI(messages, system, maxTokens = 1500, attempt = 0, json = false) {
-  const body = { model: MODEL, max_tokens: maxTokens, system, messages };
-  if (json) body.output_config = { format: { type: "json_object" } };
+async function callAPI(messages, system, maxTokens = 1500, attempt = 0) {
   const res = await fetch(API, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
+    body: JSON.stringify({ model: MODEL, max_tokens: maxTokens, system, messages }),
   });
   if (res.status === 429 && attempt < 3) {
     const wait = (attempt + 1) * 8000;
     await new Promise(r => setTimeout(r, wait));
-    return callAPI(messages, system, maxTokens, attempt + 1, json);
+    return callAPI(messages, system, maxTokens, attempt + 1);
   }
   if (!res.ok) throw new Error("API error " + res.status);
   const d = await res.json();
@@ -58,8 +56,8 @@ async function callAPI(messages, system, maxTokens = 1500, attempt = 0, json = f
 }
 
 async function askJSON(messages, extra) {
-  const sys = SYSTEM + (extra ? " " + extra : "");
-  return callAPI(messages, sys, 1500, 0, true);
+  const sys = SYSTEM + " " + (extra || "") + " Respond ONLY with raw valid JSON — no markdown fences, no preamble, no trailing text after the closing brace or bracket.";
+  return callAPI(messages, sys, 1500);
 }
 
 async function askProse(messages) {
