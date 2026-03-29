@@ -1388,9 +1388,9 @@ export default function App() {
     stor.set(`cstutor_${COURSE.id}_current`, { topic, sections, questions, answers, results, followUpSections, videos, phase });
   }, [phase, answers]);
 
-  // Save to history when session completes
+  // Save to history as soon as quiz is graded (don't wait for "Complete Session")
   useEffect(() => {
-    if (phase === "done" && results && !sessionSavedRef.current) {
+    if ((phase === "grade" || phase === "done") && results && !sessionSavedRef.current) {
       sessionSavedRef.current = true;
       setSessions(prev => [{ id: Date.now(), topic, date: today(), score: results.score, total: results.total, weakAreas: results.weakAreas || [], strongAreas: results.strongAreas || [] }, ...prev]);
     }
