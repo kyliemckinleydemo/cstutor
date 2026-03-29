@@ -80,12 +80,12 @@ async function askProse(messages) {
 }
 
 const COSC50_TOPIC_MAP = {
-  "tiny search engine crawler": "tiny search engine web crawler implementation C programming",
-  "tiny search engine indexer": "tiny search engine inverted index data structure C programming",
-  "tiny search engine querier": "tiny search engine query parser ranking C programming",
-  "tse crawler": "tiny search engine web crawler implementation C programming",
-  "tse indexer": "tiny search engine inverted index data structure C programming",
-  "tse querier": "tiny search engine query parser ranking C programming",
+  "tiny search engine crawler": "web crawler implementation C programming breadth first",
+  "tiny search engine indexer": "inverted index data structure C programming tutorial",
+  "tiny search engine querier": "boolean query parser ranked search results C programming",
+  "tse crawler": "web crawler implementation C programming breadth first",
+  "tse indexer": "inverted index data structure C programming tutorial",
+  "tse querier": "boolean query parser ranked search results C programming",
   "bash scripting": "bash shell scripting tutorial",
   "linux shell": "linux command line tutorial",
   "git": "git version control tutorial",
@@ -1411,8 +1411,13 @@ export default function App() {
     doLesson();
   };
 
-  const doLesson = () => { setSavedSession(null); return wrap(async () => {
-    const sectionPrompt = (titles) => `Build part of a lesson on "${topic}" for a smart student who may not know this topic deeply yet.
+  const expandTopic = (t) => COURSE.id === "cosc50" ? t.replace(/\bTSE\b/g, "Tiny Search Engine") : t;
+
+  const doLesson = () => {
+    const expanded = expandTopic(topic.trim());
+    if (expanded !== topic.trim()) setTopic(expanded);
+    setSavedSession(null); return wrap(async () => {
+    const sectionPrompt = (titles) => `Build part of a lesson on "${expanded || topic}" for a smart student who may not know this topic deeply yet.
 
 Return JSON with exactly this structure — sections array only, no other keys:
 {
@@ -1439,7 +1444,7 @@ IMPORTANT: prose must be real paragraph text, not placeholder instructions. keyI
         ["example", "A concrete worked example", "Walk through a full numerical example step by step. Explain what you are doing AND why at each stage — not just algebra."],
         ["pitfalls", "Where people get confused", "Describe 2-3 specific misconceptions. Explain why each happens and give the correct mental model. Be direct and specific."],
       ]) }]),
-      fetchYouTubeVideos(topic).catch(() => []),
+      fetchYouTubeVideos(expanded).catch(() => []),
     ]);
 
     const s1 = parseJSON(r1).sections || [];
@@ -1448,7 +1453,7 @@ IMPORTANT: prose must be real paragraph text, not placeholder instructions. keyI
     setSections(allSecs);
     setVideos(ytVideos);
     // Collect key items into formula sheet
-    const newItems = allSecs.flatMap(s => (s.keyItems || []).map(ki => ({ topic, label: ki.label, context: ki.context, type: ki.type })));
+    const newItems = allSecs.flatMap(s => (s.keyItems || []).map(ki => ({ topic: expanded, label: ki.label, context: ki.context, type: ki.type })));
     if (newItems.length) {
       setFormulas(prev => {
         const seen = new Set(prev.map(f => f.topic + "||" + f.label));
@@ -1458,7 +1463,7 @@ IMPORTANT: prose must be real paragraph text, not placeholder instructions. keyI
     setPhase("learn");
     // Save lesson content for My Courses (keep last 30)
     setSavedLessons(prev => {
-      const next = { ...prev, [topic]: { sections: allSecs, savedAt: Date.now() } };
+      const next = { ...prev, [expanded]: { sections: allSecs, savedAt: Date.now() } };
       const keys = Object.keys(next).sort((a, b) => next[b].savedAt - next[a].savedAt);
       keys.slice(30).forEach(k => delete next[k]);
       return next;
@@ -1469,7 +1474,7 @@ IMPORTANT: prose must be real paragraph text, not placeholder instructions. keyI
       fetch("/api/admin/track", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sessionToken: user.sessionToken, courseId: COURSE.id, topic }),
+        body: JSON.stringify({ sessionToken: user.sessionToken, courseId: COURSE.id, topic: expanded }),
       }).catch(() => {});
     }
   }, "Building your lesson…"); };
