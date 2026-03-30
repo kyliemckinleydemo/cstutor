@@ -1477,7 +1477,7 @@ IMPORTANT: prose must be real paragraph text, not placeholder instructions. keyI
         body: JSON.stringify({ sessionToken: user.sessionToken, courseId: COURSE.id, topic: expanded }),
       }).catch(() => {});
     }
-  }, "Building your lesson…"); };
+  }, "Building your lesson… (takes 20–30 seconds)"); };
 
   const doQuiz = () => wrap(async () => {
     const summary = sections.map(s => s.title + ": " + (s.prose || "").slice(0, 150)).join("\n\n");
@@ -1525,7 +1525,7 @@ IMPORTANT: prose must be real paragraph text, not placeholder instructions. keyI
       setFlagged(prev => [...prev.filter(f => !newFlagged.some(nf => nf.topic === f.topic && nf.question === f.question)), ...newFlagged]);
     }
     setPhase("grade");
-  }, "Grading your answers…");
+  }, "Grading your answers… (takes 20–30 seconds)");
 
   const doFollowUp = () => wrap(async () => {
     if (!results?.weakAreas?.length) { setPhase("done"); return; }
