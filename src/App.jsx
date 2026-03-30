@@ -297,7 +297,7 @@ Paragraph 3 — A fully worked concrete example with real numbers or explicit sy
 Paragraph 4 — Why this matters. When does this show up in CS or ML applications? What goes wrong — practically — if someone misunderstands this?
 
 Be thorough. Assume nothing except basic algebra.`
-      }], 900);
+      }], 1000);
       setContent(text);
     } catch { setContent("Couldn't load explanation. Please try again."); }
     setLoading(false);
@@ -354,7 +354,7 @@ Write a concise, focused ${CODE_LANG} code example that directly illustrates the
 - End with 2-3 lines of plain English (as comments) explaining what to observe when you run it
 
 Return ONLY the code block, no prose before or after.`
-      }], 600);
+      }]);
       // Strip markdown fences if present
       setCode(text.replace(/^```[\w]*\n?/m, "").replace(/```$/m, "").trim());
     } catch { setCode("// Could not load example — please try again."); }
@@ -452,7 +452,7 @@ Paragraph 2 — Walk through the solution step by step. If it's computational, s
 Paragraph 3 — What this question is really testing. Explain the deeper concept behind it, where it comes up in practice (CS/ML applications), and what distinguishes a strong answer from a weak one on this type of question.
 
 Write in flowing paragraphs, no bullet points. Be thorough — this is a teaching moment.`
-      }], 900);
+      }]);
       setContent(text);
     } catch { setContent("Couldn't load explanation. Please try again."); }
     setLoading(false);
@@ -497,7 +497,7 @@ function ChatPanel({ topic, sections, questions, answers, results, followUpText,
     setLearnPrompts(null);
     const keyTerms = sections.flatMap(s => (s.keyItems || []).map(k => k.label)).slice(0, 8).join(", ");
     const snippet = (sections[0]?.prose || "").slice(0, 200);
-    askJSON([{ role: "user", content: `A student just finished a lesson on "${topic}". Key terms covered: ${keyTerms || "none"}. Lesson excerpt: "${snippet}". Generate 4 follow-up questions they might click to ask next. Rules: (1) Every question must name "${topic}" or a specific term from the lesson — no generic questions like "Walk me through the intuition again". (2) Under 9 words each. (3) Mix question types: one asking why something works, one asking about a specific term, one asking for an example, one connecting to a real use case. Return a JSON array of exactly 4 strings.` }], "", 200)
+    askJSON([{ role: "user", content: `A student just finished a lesson on "${topic}". Key terms covered: ${keyTerms || "none"}. Lesson excerpt: "${snippet}". Generate 4 follow-up questions they might click to ask next. Rules: (1) Every question must name "${topic}" or a specific term from the lesson — no generic questions like "Walk me through the intuition again". (2) Under 9 words each. (3) Mix question types: one asking why something works, one asking about a specific term, one asking for an example, one connecting to a real use case. Return a JSON array of exactly 4 strings.` }], "", 400)
       .then(raw => {
         try {
           const arr = parseJSON(typeof raw === "string" ? raw : JSON.stringify(raw));
@@ -948,7 +948,7 @@ function ReviewView({ flagged, setFlagged, onDone }) {
     if (!ref) return;
     setGenQ(null); setAnswer(""); setResult(null);
     setGenLoading(true);
-    askJSON([{ role: "user", content: `The student previously struggled with this question on "${ref.topic}":\n\nOriginal question: ${ref.question}\nFeedback they received: ${ref.feedback || "none"}\n\nGenerate a fresh question that tests the same concept from a different angle. It should be ${ref.difficulty || "medium"} difficulty and ${ref.type || "conceptual"} type.\n\nReturn JSON only:\n{"question":"..."}` }], "", 150)
+    askJSON([{ role: "user", content: `The student previously struggled with this question on "${ref.topic}":\n\nOriginal question: ${ref.question}\nFeedback they received: ${ref.feedback || "none"}\n\nGenerate a fresh question that tests the same concept from a different angle. It should be ${ref.difficulty || "medium"} difficulty and ${ref.type || "conceptual"} type.\n\nReturn JSON only:\n{"question":"..."}` }])
       .then(raw => setGenQ(parseJSON(raw)?.question || ref.question))
       .catch(() => setGenQ(ref.question))
       .finally(() => setGenLoading(false));
@@ -971,7 +971,7 @@ function ReviewView({ flagged, setFlagged, onDone }) {
     if (!answer.trim() || loading || !genQ) return;
     setLoading(true);
     try {
-      const raw = await askJSON([{ role: "user", content: `Grade this answer on "${q.topic}":\n\nQuestion: ${genQ}\nAnswer: ${answer}\n\n1=correct, 0.5=partial, 0=wrong. Return JSON:\n{"score":0,"feedback":"2 specific sentences"}` }], "", 150);
+      const raw = await askJSON([{ role: "user", content: `Grade this answer on "${q.topic}":\n\nQuestion: ${genQ}\nAnswer: ${answer}\n\n1=correct, 0.5=partial, 0=wrong. Return JSON:\n{"score":0,"feedback":"2 specific sentences"}` }]);
       const parsed = parseJSON(raw);
       setResult(parsed);
       const d = new Date();
@@ -1419,19 +1419,31 @@ export default function App() {
     setSavedSession(null); return wrap(async () => {
     const sectionPrompt = (titles) => `Build part of a lesson on "${expanded || topic}" for a smart student who may not know this topic deeply yet.
 
-Return JSON: {"sections":[${titles.map(([id, title, note]) => `{"id":"${id}","title":"${title}","prose":"3 connected paragraphs, no bullets. ${note}","keyItems":[{"label":"...","context":"one sentence","type":"formula|definition"}]}`).join(",")}]}
+Return JSON with exactly this structure — sections array only, no other keys:
+{
+  "sections": [
+    ${titles.map(([id, title, note]) => `{
+      "id": "${id}",
+      "title": "${title}",
+      "prose": "Write 3 full connected paragraphs (no bullets, no headers inside). ${note} Each paragraph minimum 60 words.",
+      "keyItems": [
+        { "label": "exact formula, expression, or key term", "context": "one sentence explaining what it means or where it comes from", "type": "formula or definition" }
+      ]
+    }`).join(",\n    ")}
+  ]
+}
 
-keyItems: 2-3 per section. type="formula" for Big-O, equations, symbolic expressions; type="definition" for terms.`;
+IMPORTANT: prose must be real paragraph text, not placeholder instructions. keyItems: always include 2-3 per section. For each item set type to exactly "formula" or "definition". Use "formula" for: Big-O expressions (O(n log n), O(n²)), recurrence relations (T(n) = 2T(n/2) + O(n)), mathematical equations (h(k) = k mod m, load factor λ = n/m), complexity bounds, and any symbolic expression. Use "definition" for conceptual terms with no symbolic form. Never return an empty array.`;
 
     const [r1, r2, ytVideos] = await Promise.all([
       askJSON([{ role: "user", content: sectionPrompt([
         ["intro", "What this is and why it matters", "Start with a real-world problem this topic solves. Explain the concept in plain English before any notation. Use analogy if helpful."],
         ["mechanics", "How it actually works", "Build up mechanics step by step. Introduce notation after intuition is clear. Explain what each symbol means and where it comes from."],
-      ]) }], "", 1800),
+      ]) }]),
       askJSON([{ role: "user", content: sectionPrompt([
         ["example", "A concrete worked example", "Walk through a full numerical example step by step. Explain what you are doing AND why at each stage — not just algebra."],
         ["pitfalls", "Where people get confused", "Describe 2-3 specific misconceptions. Explain why each happens and give the correct mental model. Be direct and specific."],
-      ]) }], "", 1800),
+      ]) }]),
       fetchYouTubeVideos(expanded).catch(() => []),
     ]);
 
@@ -1472,7 +1484,7 @@ keyItems: 2-3 per section. type="formula" for Big-O, equations, symbolic express
     const raw = await askJSON([{
       role: "user",
       content: `Based on this lesson about "${topic}":\n\n${summary}\n\nGenerate 5 quiz questions. 2 conceptual (intuition/definition, no calculation), 2 computational (show your work), 1 synthesis (connect to broader CS/ML). Make them specific to the lesson. Return JSON array:\n[{"id":1,"question":"...","difficulty":"easy|medium|hard","type":"conceptual|computational|synthesis"}]`,
-    }], "", 600);
+    }]);
     setQuestions(parseJSON(raw)); setAnswers({}); setPhase("quiz");
   }, "Generating quiz…");
 
@@ -1481,7 +1493,7 @@ keyItems: 2-3 per section. type="formula" for Big-O, equations, symbolic express
     const raw = await askJSON([{
       role: "user",
       content: `Grade these answers on "${topic}":\n\n${qa}\n\n1 = correct, 0.5 = understands but incomplete, 0 = wrong or blank. Return JSON:\n{"score":N,"total":5,"results":[{"id":1,"score":0|0.5|1,"feedback":"2 specific sentences: what was right, what was wrong or missing"}],"weakAreas":["concept name"],"strongAreas":["concept name"]}`,
-    }], "", 900);
+    }]);
     const parsed = parseJSON(raw);
     setResults(parsed);
     // Track analytics (fire-and-forget, first grade only)
@@ -1537,7 +1549,7 @@ Return JSON for a single re-instruction section:
     }
   ]
 }`
-        }], "", 1000);
+        }]);
         const parsed = parseJSON(r);
         allSections.push(...(parsed.sections || []));
       } catch { /* skip failed area, continue */ }
