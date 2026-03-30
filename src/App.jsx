@@ -1516,7 +1516,7 @@ IMPORTANT: prose must be real paragraph text, not placeholder instructions. keyI
       ]) }], "", 1800),
       askJSON([{ role: "user", content: sectionPrompt([
         ["example", "A concrete worked example", "Walk through a full numerical example step by step. Explain what you are doing AND why at each stage — not just algebra."],
-        ["pitfalls", "Where people get confused", "Describe 2-3 specific misconceptions. Explain why each happens and give the correct mental model. Be direct and specific."],
+        ["pitfalls", "Where people get confused", "Pick the 2-3 places where students most commonly get stuck, make wrong assumptions, or need a second explanation. For each: name the specific confusion precisely (not vaguely), explain *why* it's a natural mistake to make, then give the corrected mental model in plain English. End with the single most important thing to hold onto — the insight that makes everything click."],
       ]) }], "", 1800),
       fetchYouTubeVideos(expanded).catch(() => []),
     ]);
