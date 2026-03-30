@@ -525,20 +525,22 @@ function ChatPanel({ topic, sections, questions, answers, results, followUpText,
 
   const QUICK = {
     learn: learnPrompts || (COURSE.id === "cosc10"
-      ? ["Give me another worked example", "How is this used in Java?", "Walk me through the intuition again", "What's the most common mistake here?"]
+      ? ["Show me a complete working Java example", "What's the most common bug with this?", "How would I know when to use this?", "What trips people up the most here?"]
       : COURSE.id === "cosc50"
-      ? ["Give me another worked example in C", "How does this work at the memory level?", "Walk me through the intuition again", "What's the most common mistake here?"]
-      : ["Give me another worked example", "Why does this come up in ML?", "Walk me through the intuition again", "What's the most common mistake here?"]),
-    quiz:    COURSE.id === "cosc10"
-      ? ["I'm not sure how to approach this", "Can you remind me of the syntax?", "What should I be showing in my work?", "Walk me through the intuition again"]
+      ? ["What happens in memory when this runs?", "Show me a minimal C example", "What undefined behavior should I watch for?", "How would I debug this with gdb?"]
+      : ["Derive this from scratch for me", "When would this break down in practice?", "What's the key insight I need to remember?", "How does this connect to gradient descent?"]),
+    quiz: COURSE.id === "cosc10"
+      ? ["Help me think through this without giving the answer", "What Java concept is this really testing?", "Can you remind me of the syntax?", "What should I trace through to solve this?"]
       : COURSE.id === "cosc50"
-      ? ["I'm not sure how to approach this", "Can you show me an example in C?", "What should I be showing in my work?", "Walk me through the intuition again"]
-      : ["I'm not sure how to approach this", "Can you remind me of a related formula?", "What should I be showing in my work?", "Walk me through the intuition again"],
-    grade:   ["Why did I get that wrong?", "Explain Q" + (results?.results?.findIndex(r => r.score < 1) + 1 || 1) + " to me", "What's the right way to think about this?", "How do I avoid this mistake next time?"],
-    followup: COURSE.id === "cosc50"
-      ? ["Can you give another C example?", "I'm still confused about how this works", "How does this connect to the lesson?", "What would a complete implementation look like?"]
-      : ["Can you give another example of this?", "I'm still confused about the formula", "How does this connect to the lesson?", "What would a full exam answer look like?"],
-    done:    ["Summarize what I should remember", "What should I study next?", "Give me one more practice problem"],
+      ? ["Help me think through this without giving the answer", "What should the memory layout look like?", "What C concept is this really testing?", "Walk me through the approach step by step"]
+      : ["Help me set up the math without solving it", "What formula or concept should I start with?", "What's the intuition behind this question?", "Walk me through the approach step by step"],
+    grade: ["Why did I get that wrong?", "Explain Q" + (results?.results?.findIndex(r => r.score < 1) + 1 || 1) + " to me from scratch", "What's the right mental model here?", "Give me a similar practice problem"],
+    followup: COURSE.id === "cosc10"
+      ? ["Show me a clean Java example of this", "Try explaining it from a completely different angle", "What's the one thing I need to get right?", "What would this look like on a CS 10 exam?"]
+      : COURSE.id === "cosc50"
+      ? ["Show me a clean C example from scratch", "Try explaining it from a completely different angle", "How would Valgrind catch a bug here?", "What would a correct implementation look like?"]
+      : ["Show me a clean worked example", "Try explaining it from a completely different angle", "What's the one thing I need to nail this?", "What would a perfect exam answer look like?"],
+    done: ["What's the single most important thing to remember?", "What should I study next?", "Give me a harder practice problem", "How might this show up on an exam?"],
   };
   const quickList = QUICK[phase] || QUICK.learn;
 
