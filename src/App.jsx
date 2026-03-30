@@ -294,9 +294,9 @@ Paragraph 2 — Where it comes from. Build the formula or concept piece by piece
 
 Paragraph 3 — A fully worked concrete example with real numbers or explicit symbols. Walk through every step out loud, explaining what's happening and why at each stage.
 
-Paragraph 4 — Why this matters. When does this show up in CS or ML applications? What goes wrong — practically — if someone misunderstands this?
+Paragraph 4 — Why this matters. When does this show up in practice? What goes wrong if someone misunderstands this?
 
-Be thorough. Assume nothing except basic algebra.`
+Be thorough. ${COURSE.id === "cosc50" ? "Assume C syntax knowledge. Use code and memory examples." : COURSE.id === "cosc10" ? "Assume Java syntax knowledge. Use Java examples." : "Assume nothing except basic algebra."}`
       }], 1000);
       setContent(text);
     } catch { setContent("Couldn't load explanation. Please try again."); }
@@ -449,7 +449,7 @@ Paragraph 1 — The complete correct answer, explained clearly from first princi
 
 Paragraph 2 — Walk through the solution step by step. If it's computational, show every step with real numbers. If it's conceptual, trace the logic carefully. Make the method replicable.
 
-Paragraph 3 — What this question is really testing. Explain the deeper concept behind it, where it comes up in practice (CS/ML applications), and what distinguishes a strong answer from a weak one on this type of question.
+Paragraph 3 — What this question is really testing. Explain the deeper concept behind it, where it comes up in practice, and what distinguishes a strong answer from a weak one on this type of question.
 
 Write in flowing paragraphs, no bullet points. Be thorough — this is a teaching moment.`
       }]);
@@ -1488,10 +1488,13 @@ IMPORTANT: prose must be real paragraph text, not placeholder instructions. keyI
   }, "Building your lesson… (takes 20–30 seconds)"); };
 
   const doQuiz = () => wrap(async () => {
-    const summary = sections.map(s => s.title + ": " + (s.prose || "").slice(0, 150)).join("\n\n");
+    const summary = sections.map(s => s.title + ": " + (s.prose || "").slice(0, 300)).join("\n\n");
+    const synthesisDesc = COURSE.id === "cosc50" ? "connect to systems programming or C in practice"
+      : COURSE.id === "cosc10" ? "connect to Java, OOP, or software design"
+      : "connect to broader ML or CS";
     const raw = await askJSON([{
       role: "user",
-      content: `Based on this lesson about "${topic}":\n\n${summary}\n\nGenerate 5 quiz questions. 2 conceptual (intuition/definition, no calculation), 2 computational (show your work), 1 synthesis (connect to broader CS/ML). Make them specific to the lesson. Return JSON array:\n[{"id":1,"question":"...","difficulty":"easy|medium|hard","type":"conceptual|computational|synthesis"}]`,
+      content: `Based on this lesson about "${topic}":\n\n${summary}\n\nGenerate 5 quiz questions. 2 conceptual (intuition/definition, no calculation), 2 computational (show your work), 1 synthesis (${synthesisDesc}). Make them specific to the lesson. Return JSON array:\n[{"id":1,"question":"...","difficulty":"easy|medium|hard","type":"conceptual|computational|synthesis"}]`,
     }]);
     setQuestions(parseJSON(raw)); setAnswers({}); setPhase("quiz");
   }, "Generating quiz…");
@@ -1500,7 +1503,7 @@ IMPORTANT: prose must be real paragraph text, not placeholder instructions. keyI
     const qa = questions.map((q, i) => `Q${i + 1} [${q.difficulty}/${q.type}]: ${q.question}\nAnswer: ${answers[i] || "[blank]"}`).join("\n\n");
     const raw = await askJSON([{
       role: "user",
-      content: `Grade these answers on "${topic}":\n\n${qa}\n\n1 = correct, 0.5 = understands but incomplete, 0 = wrong or blank. Return JSON:\n{"score":N,"total":5,"results":[{"id":1,"score":0|0.5|1,"feedback":"2 specific sentences: what was right, what was wrong or missing"}],"weakAreas":["concept name"],"strongAreas":["concept name"]}`,
+      content: `Grade these answers on "${topic}":\n\n${qa}\n\n1 = correct, 0.5 = understands but incomplete, 0 = wrong or blank. Return JSON:\n{"score":N,"total":5,"results":[{"id":1,"score":0|0.5|1,"feedback":"3 specific sentences: what was right, what was wrong or missing, and what the student should understand or do differently"}],"weakAreas":["concept name"],"strongAreas":["concept name"]}`,
     }]);
     const parsed = parseJSON(raw);
     setResults(parsed);
@@ -1537,20 +1540,26 @@ IMPORTANT: prose must be real paragraph text, not placeholder instructions. keyI
 
   const doFollowUp = () => wrap(async () => {
     if (!results?.weakAreas?.length) { setPhase("done"); return; }
-    const allSections = [];
-    for (const area of results.weakAreas) {
+    // Build per-area context: what did the student actually answer wrong?
+    const wrongQA = (results.results || [])
+      .map((r, i) => ({ r, q: questions[i], a: answers[i] }))
+      .filter(({ r }) => r.score < 1)
+      .map(({ r, q, a }) => `Q: ${q?.question}\nStudent answered: ${a || "[blank]"}\nFeedback: ${r.feedback}`)
+      .join("\n\n");
+
+    const sections = await Promise.all(results.weakAreas.map(async (area) => {
       try {
         const r = await askJSON([{
           role: "user",
           content: `The student struggled with "${area}" from the topic "${topic}".
 
-Return JSON for a single re-instruction section:
+${wrongQA ? `Here is what they got wrong:\n${wrongQA}\n\n` : ""}Return JSON for a single re-instruction section:
 {
   "sections": [
     {
       "id": "${area.toLowerCase().replace(/\s+/g, "_")}",
       "title": "Revisiting: ${area}",
-      "prose": "Write 3 full paragraphs (no bullets): (1) Why this is confusing and what the correct mental model is. (2) A fresh explanation from a different angle than a typical textbook. (3) A step-by-step example showing correct application with real numbers.",
+      "prose": "Write 3 full paragraphs (no bullets): (1) Why this is confusing and what the correct mental model is — address the specific mistake above directly. (2) A fresh explanation from a different angle than a typical textbook. (3) A step-by-step example showing correct application.",
       "keyItems": [
         { "label": "specific formula or term they likely misunderstood", "context": "what the confusion usually is" }
       ]
@@ -1558,10 +1567,10 @@ Return JSON for a single re-instruction section:
   ]
 }`
         }]);
-        const parsed = parseJSON(r);
-        allSections.push(...(parsed.sections || []));
-      } catch { /* skip failed area, continue */ }
-    }
+        return parseJSON(r).sections || [];
+      } catch { return []; }
+    }));
+    const allSections = sections.flat();
     setFollowUpSections(allSections);
     setPhase("followup");
   }, "Preparing targeted review…");
