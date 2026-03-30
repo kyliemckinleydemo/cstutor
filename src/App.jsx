@@ -1427,11 +1427,11 @@ keyItems: 2-3 per section. type="formula" for Big-O, equations, symbolic express
       askJSON([{ role: "user", content: sectionPrompt([
         ["intro", "What this is and why it matters", "Start with a real-world problem this topic solves. Explain the concept in plain English before any notation. Use analogy if helpful."],
         ["mechanics", "How it actually works", "Build up mechanics step by step. Introduce notation after intuition is clear. Explain what each symbol means and where it comes from."],
-      ]) }]),
+      ]) }], "", 1800),
       askJSON([{ role: "user", content: sectionPrompt([
         ["example", "A concrete worked example", "Walk through a full numerical example step by step. Explain what you are doing AND why at each stage — not just algebra."],
         ["pitfalls", "Where people get confused", "Describe 2-3 specific misconceptions. Explain why each happens and give the correct mental model. Be direct and specific."],
-      ]) }]),
+      ]) }], "", 1800),
       fetchYouTubeVideos(expanded).catch(() => []),
     ]);
 
@@ -1537,7 +1537,7 @@ Return JSON for a single re-instruction section:
     }
   ]
 }`
-        }]);
+        }], "", 1000);
         const parsed = parseJSON(r);
         allSections.push(...(parsed.sections || []));
       } catch { /* skip failed area, continue */ }
