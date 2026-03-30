@@ -144,16 +144,25 @@ const today = () => new Date().toISOString().split("T")[0];
 function repairJSON(raw) {
   // Strip fences and trim
   let s = raw.replace(/```json|```/g, "").trim();
-  // Remove trailing content after last } or ]
-  const lastBrace = Math.max(s.lastIndexOf("}"), s.lastIndexOf("]"));
-  if (lastBrace > 0) s = s.slice(0, lastBrace + 1);
+  // If truncated mid-string, close the string at the last complete sentence or word boundary
+  const inString = (() => {
+    let inStr = false, escaped = false;
+    for (const ch of s) {
+      if (escaped) { escaped = false; continue; }
+      if (ch === "\\") { escaped = true; continue; }
+      if (ch === '"') inStr = !inStr;
+    }
+    return inStr;
+  })();
+  if (inString) s += '"';
+  // Remove trailing incomplete key-value pairs (e.g. ,"key": with no value)
+  s = s.replace(/,\s*"[^"]*"\s*:\s*$/, "");
   // Try to close unclosed structures
   const stack = [];
   for (const ch of s) {
     if (ch === "{" || ch === "[") stack.push(ch);
     if (ch === "}" || ch === "]") stack.pop();
   }
-  // Close any unclosed brackets
   for (let i = stack.length - 1; i >= 0; i--) {
     s += stack[i] === "{" ? "}" : "]";
   }
@@ -1447,11 +1456,11 @@ IMPORTANT: prose must be real paragraph text, not placeholder instructions. keyI
       askJSON([{ role: "user", content: sectionPrompt([
         ["intro", "What this is and why it matters", "Start with a real-world problem this topic solves. Explain the concept in plain English before any notation. Use analogy if helpful."],
         ["mechanics", "How it actually works", "Build up mechanics step by step. Introduce notation after intuition is clear. Explain what each symbol means and where it comes from."],
-      ]) }]),
+      ]) }], "", 1800),
       askJSON([{ role: "user", content: sectionPrompt([
         ["example", "A concrete worked example", "Walk through a full numerical example step by step. Explain what you are doing AND why at each stage — not just algebra."],
         ["pitfalls", "Where people get confused", "Describe 2-3 specific misconceptions. Explain why each happens and give the correct mental model. Be direct and specific."],
-      ]) }]),
+      ]) }], "", 1800),
       fetchYouTubeVideos(expanded).catch(() => []),
     ]);
 
