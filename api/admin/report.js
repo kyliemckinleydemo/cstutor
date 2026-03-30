@@ -1,7 +1,7 @@
 import { kv } from "../_kv.js";
 import { ADMINS } from "../_admins.js";
 
-const COURSE_IDS = ["cosc77", "cosc10", "cosc50"];
+const COURSE_IDS = ["cosc77", "cosc10", "cosc50", "cosc31"];
 
 function aggregate(events) {
   const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;

@@ -49,6 +49,21 @@ const COURSES = {
       "Fuzz Testing", "Bitwise Operations", "Network I/O & Sockets",
     ],
   },
+  cosc31: {
+    id: "cosc31",
+    label: "Dartmouth COSC 31",
+    title: "Darby",
+    subtitle: "Algorithm design · Proof techniques · Complexity analysis",
+    codeLanguage: "Python",
+    system: `You are a patient, thorough tutor for a Dartmouth student taking COSC 31 (Algorithms: Design and Analysis). This is a proof-based algorithms course taught by Amit Chakrabarti. Students have taken COSC 10 and COSC 30, so they know Java, basic data structures, and discrete math — but rigorous algorithm design and formal proof techniques may be new territory. Your job is to build genuine mathematical intuition, not just procedure-following. Start from first principles. Before introducing notation or pseudocode, explain *why* an algorithm works at an intuitive level. Write in full, connected paragraphs that flow naturally — not bullet points and not terse outlines. Explanations should feel like a brilliant TA who actually understands the proofs walking through them carefully. Use pseudocode (language-agnostic) or Python for code examples. Always explain *why* a design choice works — especially for greedy correctness arguments, dynamic programming subproblem structure, and divide-and-conquer recurrences. For graph algorithms, always ground the explanation in the graph structure before the pseudocode. Key course topics include: asymptotic analysis (Big-O, Θ, Ω), the Master Theorem, divide-and-conquer (merge sort, quicksort, Karatsuba), greedy algorithms (activity selection, Huffman coding, MST via Kruskal and Prim), Dijkstra's algorithm, dynamic programming (Bellman-Ford, longest common subsequence, knapsack, edit distance), graph algorithms (DFS/BFS, topological sort, SCC), network flow and max-flow/min-cut, amortized analysis, randomized algorithms, and Union-Find with path compression. You are a tutor, not a homework service. If a student asks you to solve what appears to be a specific problem set question, do not provide a complete solution. Instead, identify the underlying technique, explain it clearly, and walk through a similar, self-contained example. Guide them to the answer through understanding — never hand it to them directly.`,
+    suggested: [
+      "Asymptotic Notation & Big-O", "Master Theorem", "Divide & Conquer",
+      "Merge Sort & Quicksort", "Greedy Algorithms", "Minimum Spanning Trees (Kruskal & Prim)",
+      "Dijkstra's Shortest Path", "Dynamic Programming", "Bellman-Ford Algorithm",
+      "Network Flow & Max-Flow", "Graph DFS & Topological Sort", "Union-Find",
+      "Amortized Analysis", "Randomized Algorithms", "NP-Completeness",
+    ],
+  },
 };
 
 const COURSE = COURSES[import.meta.env.VITE_COURSE_ID] || COURSES.cosc77;
@@ -79,6 +94,29 @@ async function askProse(messages, maxTokens = 1400) {
   return callAPI(messages, SYSTEM, maxTokens);
 }
 
+const COSC31_TOPIC_MAP = {
+  "master theorem": "master theorem recurrences algorithms explained",
+  "divide and conquer": "divide and conquer algorithms tutorial",
+  "merge sort": "merge sort algorithm explained tutorial",
+  "quicksort": "quicksort algorithm explained tutorial",
+  "greedy algorithms": "greedy algorithms computer science tutorial",
+  "minimum spanning tree": "minimum spanning tree kruskal prim algorithm",
+  "kruskal": "kruskal's algorithm minimum spanning tree tutorial",
+  "prim": "prim's algorithm minimum spanning tree tutorial",
+  "dijkstra": "dijkstra shortest path algorithm tutorial",
+  "dynamic programming": "dynamic programming algorithms tutorial",
+  "bellman-ford": "bellman ford algorithm shortest path tutorial",
+  "network flow": "network flow max flow algorithm tutorial",
+  "max-flow": "max flow min cut algorithm ford fulkerson tutorial",
+  "union-find": "union find disjoint set data structure tutorial",
+  "topological sort": "topological sort algorithm DAG tutorial",
+  "amortized analysis": "amortized analysis algorithms tutorial",
+  "randomized algorithms": "randomized algorithms computer science tutorial",
+  "np-completeness": "NP completeness P NP problem computer science",
+  "asymptotic notation": "big O notation asymptotic analysis tutorial",
+  "huffman coding": "huffman coding greedy algorithm tutorial",
+};
+
 const COSC50_TOPIC_MAP = {
   "tiny search engine crawler": "web crawler implementation C programming breadth first",
   "tiny search engine indexer": "inverted index data structure C programming tutorial",
@@ -103,6 +141,12 @@ function youtubeQuery(topic) {
     const match = Object.keys(COSC50_TOPIC_MAP).find(k => lower.includes(k));
     if (match) return COSC50_TOPIC_MAP[match];
     return topic + " C programming explained";
+  }
+  if (COURSE.id === "cosc31") {
+    const lower = topic.toLowerCase();
+    const match = Object.keys(COSC31_TOPIC_MAP).find(k => lower.includes(k));
+    if (match) return COSC31_TOPIC_MAP[match];
+    return topic + " algorithm explained tutorial";
   }
   return topic + " " + CODE_LANG + " explained";
 }
@@ -305,7 +349,7 @@ Paragraph 3 — A fully worked concrete example with real numbers or explicit sy
 
 Paragraph 4 — Why this matters. When does this show up in practice? What goes wrong if someone misunderstands this?
 
-Be thorough. ${COURSE.id === "cosc50" ? "Assume C syntax knowledge. Use code and memory examples." : COURSE.id === "cosc10" ? "Assume Java syntax knowledge. Use Java examples." : "Assume nothing except basic algebra."}`
+Be thorough. ${COURSE.id === "cosc50" ? "Assume C syntax knowledge. Use code and memory examples." : COURSE.id === "cosc10" ? "Assume Java syntax knowledge. Use Java examples." : COURSE.id === "cosc31" ? "Assume discrete math and basic data structures knowledge. Use pseudocode or Python. Show formal correctness arguments where relevant." : "Assume nothing except basic algebra."}`
       }], 1000);
       setContent(text);
     } catch { setContent("Couldn't load explanation. Please try again."); }
@@ -537,17 +581,23 @@ function ChatPanel({ topic, sections, questions, answers, results, followUpText,
       ? ["Show me a complete working Java example", "What's the most common bug with this?", "How would I know when to use this?", "What trips people up the most here?"]
       : COURSE.id === "cosc50"
       ? ["What happens in memory when this runs?", "Show me a minimal C example", "What undefined behavior should I watch for?", "How would I debug this with gdb?"]
+      : COURSE.id === "cosc31"
+      ? ["Walk me through the correctness proof", "What's the worst-case complexity and why?", "When would this algorithm fail or be suboptimal?", "Show me a concrete small example traced step by step"]
       : ["Derive this from scratch for me", "When would this break down in practice?", "What's the key insight I need to remember?", "How does this connect to gradient descent?"]),
     quiz: COURSE.id === "cosc10"
       ? ["Help me think through this without giving the answer", "What Java concept is this really testing?", "Can you remind me of the syntax?", "What should I trace through to solve this?"]
       : COURSE.id === "cosc50"
       ? ["Help me think through this without giving the answer", "What should the memory layout look like?", "What C concept is this really testing?", "Walk me through the approach step by step"]
+      : COURSE.id === "cosc31"
+      ? ["Help me set up the recurrence without solving it", "What algorithm design technique applies here?", "What's the key invariant I need to identify?", "Walk me through the approach without giving the answer"]
       : ["Help me set up the math without solving it", "What formula or concept should I start with?", "What's the intuition behind this question?", "Walk me through the approach step by step"],
     grade: ["Why did I get that wrong?", "Explain Q" + (results?.results?.findIndex(r => r.score < 1) + 1 || 1) + " to me from scratch", "What's the right mental model here?", "Give me a similar practice problem"],
     followup: COURSE.id === "cosc10"
       ? ["Show me a clean Java example of this", "Try explaining it from a completely different angle", "What's the one thing I need to get right?", "What would this look like on a CS 10 exam?"]
       : COURSE.id === "cosc50"
       ? ["Show me a clean C example from scratch", "Try explaining it from a completely different angle", "How would Valgrind catch a bug here?", "What would a correct implementation look like?"]
+      : COURSE.id === "cosc31"
+      ? ["Trace through the algorithm on a small example", "What's the formal proof sketch I should know?", "How does this compare to the alternative approaches?", "What would a COSC 31 exam question look like here?"]
       : ["Show me a clean worked example", "Try explaining it from a completely different angle", "What's the one thing I need to nail this?", "What would a perfect exam answer look like?"],
     done: ["What's the single most important thing to remember?", "What should I study next?", "Give me a harder practice problem", "How might this show up on an exam?"],
   };
@@ -1050,7 +1100,7 @@ const Btn = ({ label, onClick, primary = true, disabled = false }) => (
   </button>
 );
 
-const COURSE_LABELS = { cosc77: "COSC 77 — Machine Learning", cosc10: "COSC 10 — OOP" };
+const COURSE_LABELS = { cosc77: "COSC 77 — Machine Learning", cosc10: "COSC 10 — OOP", cosc50: "COSC 50 — Systems", cosc31: "COSC 31 — Algorithms" };
 
 function AdminView({ user }) {
   const [data, setData] = useState(null);
@@ -1211,6 +1261,13 @@ function SignInView({ onSignedIn }) {
         { icon: "⚙️", label: "C examples", desc: "Real C code from labs and the TSE project" },
         { icon: "🎯", label: "Adaptive quizzing", desc: "Graded answers with targeted follow-ups" },
         { icon: "🔁", label: "Spaced repetition", desc: "AI-generated review questions on weak spots" },
+      ]
+    : COURSE.id === "cosc31"
+    ? [
+        { icon: "📐", label: "Algorithm intuition", desc: "Correctness proofs and design choices explained" },
+        { icon: "🔬", label: "Complexity analysis", desc: "Recurrences, Big-O, and Master Theorem breakdowns" },
+        { icon: "🎯", label: "Adaptive quizzing", desc: "Proof and analysis questions with targeted review" },
+        { icon: "🔁", label: "Spaced repetition", desc: "AI-generated practice on your weak algorithms" },
       ]
     : [
         { icon: "💡", label: "Clear explanations", desc: "Concepts in plain English before the code" },
@@ -1500,6 +1557,7 @@ IMPORTANT: prose must be real paragraph text, not placeholder instructions. keyI
     const summary = sections.map(s => s.title + ": " + (s.prose || "").slice(0, 300)).join("\n\n");
     const synthesisDesc = COURSE.id === "cosc50" ? "connect to systems programming or C in practice"
       : COURSE.id === "cosc10" ? "connect to Java, OOP, or software design"
+      : COURSE.id === "cosc31" ? "connect to algorithm complexity, correctness proofs, or compare with an alternative algorithm"
       : "connect to broader ML or CS";
     const raw = await askJSON([{
       role: "user",
