@@ -1768,6 +1768,7 @@ ${wrongQA ? `Here is what they got wrong:\n${wrongQA}\n\n` : ""}Return JSON for 
     stor.set(`cstutor_${COURSE.id}_current`, null);
     setView("session"); setPhase("topic"); setTopic(""); setSections([]); setQuestions([]);
     setAnswers({}); setResults(null); setFollowUpSections([]); setVideos([]); setChatHistory([]); setError("");
+    setConfirmRegen(false);
   };
 
   const pct = results ? Math.round((results.score / results.total) * 100) : 0;
