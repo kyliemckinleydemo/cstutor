@@ -296,9 +296,31 @@ function Inline({ text }) {
   );
 }
 
+function MermaidBlock({ code }) {
+  const [err, setErr] = useState(false);
+  // mermaid.ink renders Mermaid syntax server-side and returns a PNG
+  const encoded = btoa(unescape(encodeURIComponent(code.trim())));
+  const url = `https://mermaid.ink/img/${encoded}?theme=neutral&bgColor=fafef9`;
+  if (err) {
+    // Fallback: show raw code if image fails to load
+    return (
+      <pre style={{ margin: "0.75rem 0 1.1rem", padding: "14px 16px", background: "#1e2a22", borderRadius: "8px", overflowX: "auto", fontSize: "12px", lineHeight: "1.6", fontFamily: "monospace", color: "#e8f0ea", whiteSpace: "pre" }}>
+        {code}
+      </pre>
+    );
+  }
+  return (
+    <div style={{ margin: "0.75rem 0 1.1rem", borderRadius: "10px", border: "1.5px solid var(--border)", background: "#fafef9", padding: "12px", textAlign: "center" }}>
+      <img src={url} alt="Diagram" style={{ maxWidth: "100%", borderRadius: "6px" }} onError={() => setErr(true)} />
+    </div>
+  );
+}
+
 function CodeBlock({ lang, code }) {
   const [copied, setCopied] = useState(false);
   const copy = () => { navigator.clipboard.writeText(code).then(() => { setCopied(true); setTimeout(() => setCopied(false), 1500); }); };
+
+  if (lang === "mermaid") return <MermaidBlock code={code} />;
 
   if (lang === "svg") {
     // Strip scripts and event handlers; render inline SVG directly
@@ -1604,7 +1626,7 @@ Return JSON with exactly this structure — sections array only, no other keys:
         ["example", "A fully traced example",
          "5+ full paragraphs. Choose a concrete case with real numbers or explicit symbols — not a toy, but a case rich enough to show the full behavior. Paragraph 1: set up the problem and state what you are going to compute and why. Paragraphs 2-4: work through the ENTIRE process step by step — at every step say WHAT you are doing AND WHY, not just the algebra; show intermediate values and what they mean. Paragraph 5+: reflect on what the example reveals — what would change with different inputs, what edge cases exist, what the result tells you about the concept. A student should finish this section able to apply the procedure to a new input without any further help."],
         ["diagram", "A visual diagram",
-         "Open this section with a real SVG diagram inside a code block. Begin with three backticks followed immediately by the word svg, then the SVG on the following lines, then three backticks to close. SVG requirements: use viewBox='0 0 720 320' width='100%' height='auto'. In <defs> define an arrowhead marker: <marker id='arrow' markerWidth='8' markerHeight='8' refX='6' refY='3' orient='auto'><path d='M0,0 L0,6 L8,3 z' fill='#2d5a3d'/></marker>. Use <rect fill='#e8f5ed' stroke='#2d5a3d' strokeWidth='1.5' rx='4'> for boxes and stages. Use <circle fill='#e8f5ed' stroke='#2d5a3d' strokeWidth='1.5'> for nodes. Use <line> or <path> with marker-end='url(#arrow)' stroke='#2d5a3d' for arrows. Use <text fill='#1a3a2a' fontSize='12' fontFamily='monospace' textAnchor='middle'> for labels; use dominant-baseline='middle' to center text vertically. NO scripts, NO event handlers, NO external resources. What to draw — graphics topics: the geometric setup or pipeline stages as a labeled flow of boxes; algorithm topics: a concrete traced example (tree with values, graph with weights, array with indices, DP table with partial fill); systems topics: memory layout with stack/heap and labeled addresses; OOP topics: class hierarchy or object interaction with labeled arrows. After the closing fence, write 3+ paragraphs: one explaining every labeled element in the diagram; one describing the structural relationship the diagram makes visible that prose cannot; one describing how the diagram changes for a different input or case."],
+         "Open with a Mermaid diagram in a code block (three backticks followed immediately by 'mermaid'). Choose the right type: use 'flowchart LR' or 'flowchart TD' for pipelines, data flow, or algorithm steps; use 'graph TD' for trees or graphs (edge labels with |label| syntax); use 'classDiagram' for OOP class hierarchies; use 'stateDiagram-v2' for state machines. Rules: wrap multi-word labels in double quotes; keep to 8-14 nodes total; avoid parentheses, angle brackets, or equals signs inside node labels — use words instead. Topic guide: graphics → pipeline stages as a labeled flowchart LR with each stage as a node and transformation labels on edges; algorithm → concrete traced example on real data using graph TD for a tree or flowchart TD for algorithm steps with state shown at each node; systems → memory layout or process flow as flowchart TD with labeled regions; OOP → class hierarchy as classDiagram with method names shown. After the closing fence, write 3+ paragraphs: one explaining every node and edge in the diagram; one describing the structural relationship it makes visible that prose cannot; one showing how the diagram shifts for a different input or case."],
       ]) }], "", 16000, MODEL_OPUS, DEEP),
       askJSON([{ role: "user", content: sectionPrompt([
         ["proof", "Why it works: the proof sketch",
