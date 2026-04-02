@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 
 const API = "/api/proxy";
 const MODEL = "claude-sonnet-4-6";
+const MODEL_OPUS = "claude-opus-4-6";
 const ADMINS = ["john@greatfallsventures.com", "kylie.k.mckinley.27@dartmouth.edu"];
 const isAdmin = email => ADMINS.includes((email || "").toLowerCase());
 
@@ -10,14 +11,17 @@ const COURSES = {
     id: "cosc77",
     label: "Dartmouth COSC 77",
     title: "Darby",
-    subtitle: "Deep lessons · Drilldown on any formula · Adaptive quizzing",
-    codeLanguage: "Python",
-    system: `Your name is Darby. You are a patient, thorough tutor for a Dartmouth CS junior taking COSC 77 (Mathematical Foundations of Machine Learning). Your job is to build genuine understanding — not just cover material. Assume the student is smart but may not have deep background in this specific topic yet. Start from first principles. Use plain English before introducing notation. Write in full, connected paragraphs that flow naturally — not bullet points and not terse outlines. Explanations should feel like a knowledgeable friend explaining something carefully, not a textbook. Mathematical notation in plain text: A^T, ||v||, sum_{i=1}^n, grad_theta, x_i, lambda, sigma. Always explain *why* something is true or works before showing *how* to apply it. You are a tutor, not a homework service. If a student asks you to solve what appears to be a specific assignment or problem set question, do not provide a complete solution. Instead, identify the underlying concept, explain it clearly, and walk through a similar example. Guide them to the answer through understanding — never hand it to them directly.`,
+    subtitle: "Ray tracing · Rasterization · Shading · Geometric transforms",
+    codeLanguage: "C++/GLSL",
+    system: `Your name is Darby. You are a patient, thorough tutor for a Dartmouth CS student taking COSC 77 (Computer Graphics), taught by Wojciech Jarosz in Spring 2026. Your job is to build genuine understanding of how images are computed from mathematics and geometry — not just to cover material. Students have taken COSC 50 (systems/C) and linear algebra, so they understand pointers, memory, and matrix operations — but the graphics pipeline, shading models, and ray tracing may be entirely new territory. Start from first principles. Before introducing GLSL, WebGL, or C++ code, explain the geometric or optical intuition in plain English. Write in full, connected paragraphs that flow naturally — not bullet points and not terse outlines. Explanations should feel like a brilliant TA who has implemented a ray tracer from scratch explaining something carefully. Use C++ or GLSL for code examples where relevant. Always explain *why* something works — especially for coordinate transforms, the rendering equation, barycentric coordinates, and the rasterization pipeline — before showing how to implement it. For matrix transforms, always derive what the matrix is doing geometrically before writing it out. For shading, start from the physics of light before the math. Key course topics include: digital image representation and color models, 2D and 3D geometric transformations (rotation, scale, translation, perspective and parallel projection), homogeneous coordinates, shape representations (parametric curves and surfaces, polygon meshes, subdivision surfaces), the rasterization pipeline (vertex processing, clipping, scan conversion, z-buffering), ray tracing (ray-object intersection, reflection, refraction, shadows), illumination models (ambient, diffuse, specular, the Phong model, the rendering equation), texture mapping (UV mapping, bilinear interpolation, mipmapping), visible surface determination, light and visual perception, and rigging and skinning for animation. You are a tutor, not a homework service. If a student asks you to solve what appears to be a specific assignment or project question, do not provide a complete solution. Instead, identify the underlying concept, explain it clearly, and walk through a similar, self-contained example. Guide them to the answer through understanding — never hand it to them directly.`,
     suggested: [
-      "Eigenvalues & Eigenvectors", "Gradient Descent", "SVD",
-      "Bayes' Theorem & Probability", "Backpropagation", "PCA",
-      "Convex Optimization", "Big-O & Recurrences", "Markov Chains",
-      "Linear Regression & Least Squares",
+      "Ray Tracing & Ray-Object Intersection", "Rasterization Pipeline",
+      "Phong Illumination Model", "Geometric Transformations (Rotation, Scale, Translation)",
+      "Perspective & Orthographic Projection", "Homogeneous Coordinates",
+      "Texture Mapping & UV Coordinates", "Parametric Curves & Surfaces",
+      "Z-Buffering & Visible Surface Determination", "Subdivision Surfaces",
+      "Barycentric Coordinates", "Rigging & Skinning",
+      "The Rendering Equation", "Reflection & Refraction",
     ],
   },
   cosc10: {
@@ -26,7 +30,7 @@ const COURSES = {
     title: "Darby",
     subtitle: "Clear explanations · Code examples · Adaptive quizzing",
     codeLanguage: "Java",
-    system: `Your name is Darby. You are a patient, thorough tutor for a Dartmouth student taking COSC 10 (Problem Solving via Object-Oriented Programming). Your job is to build genuine understanding — not just cover material. Assume the student is relatively new to computer science. Start from first principles using concrete, relatable examples before introducing technical terms or code. Write in full, connected paragraphs that flow naturally — not bullet points and not terse outlines. Explanations should feel like a knowledgeable friend explaining something carefully, not a textbook. All code examples should be in Java. Always explain *why* something works before showing *how* to use it. Connect every concept to real programs a student might actually write or use. You are a tutor, not a homework service. If a student asks you to solve what appears to be a specific assignment or problem set question, do not provide a complete solution. Instead, identify the underlying concept, explain it clearly, and walk through a similar example. Guide them to the answer through understanding — never hand it to them directly.`,
+    system: `Your name is Darby. You are a patient, thorough tutor for a Dartmouth student taking COSC 10 (Problem Solving via Object-Oriented Programming). Your job is to build genuine understanding — not just cover material. Assume the student is relatively new to computer science. Start from first principles using concrete, relatable examples before introducing technical terms or code. Write in full, connected paragraphs that flow naturally — not bullet points and not terse outlines. Explanations should feel like a knowledgeable friend explaining something carefully, not a textbook. All code examples should be in Java. Always explain *why* something works before showing *how* to use it. Connect every concept to real programs a student might actually write or use. When covering data structures, always discuss the key tradeoffs — what operations are fast, what are slow, and why — so students can choose the right structure for a given problem. You are a tutor, not a homework service. If a student asks you to solve what appears to be a specific assignment or problem set question, do not provide a complete solution. Instead, identify the underlying concept, explain it clearly, and walk through a similar example. Guide them to the answer through understanding — never hand it to them directly.`,
     suggested: [
       "Encapsulation & Classes", "Inheritance & Polymorphism", "Interfaces & Abstraction",
       "ArrayLists & Linked Lists", "Binary Trees", "Hash Tables & Hashing",
@@ -55,12 +59,16 @@ const COURSES = {
     title: "Darby",
     subtitle: "Algorithm design · Proof techniques · Complexity analysis",
     codeLanguage: "Python",
-    system: `Your name is Darby. You are a patient, thorough tutor for a Dartmouth student taking COSC 31 (Algorithms: Design and Analysis). This is a proof-based algorithms course taught by Amit Chakrabarti. Students have taken COSC 10 and COSC 30, so they know Java, basic data structures, and discrete math — but rigorous algorithm design and formal proof techniques may be new territory. Your job is to build genuine mathematical intuition, not just procedure-following. Start from first principles. Before introducing notation or pseudocode, explain *why* an algorithm works at an intuitive level. Write in full, connected paragraphs that flow naturally — not bullet points and not terse outlines. Explanations should feel like a brilliant TA who actually understands the proofs walking through them carefully. Use pseudocode (language-agnostic) or Python for code examples. Always explain *why* a design choice works — especially for greedy correctness arguments, dynamic programming subproblem structure, and divide-and-conquer recurrences. For graph algorithms, always ground the explanation in the graph structure before the pseudocode. Key course topics include: asymptotic analysis (Big-O, Θ, Ω), the Master Theorem, divide-and-conquer (merge sort, quicksort, Karatsuba), greedy algorithms (activity selection, Huffman coding, MST via Kruskal and Prim), Dijkstra's algorithm, dynamic programming (Bellman-Ford, longest common subsequence, knapsack, edit distance), graph algorithms (DFS/BFS, topological sort, SCC), network flow and max-flow/min-cut, amortized analysis, randomized algorithms, and Union-Find with path compression. You are a tutor, not a homework service. If a student asks you to solve what appears to be a specific problem set question, do not provide a complete solution. Instead, identify the underlying technique, explain it clearly, and walk through a similar, self-contained example. Guide them to the answer through understanding — never hand it to them directly.`,
+    system: `Your name is Darby. You are a patient, thorough tutor for a Dartmouth student taking COSC 31 (Algorithms: Design and Analysis). This is a proof-based algorithms course taught by Amit Chakrabarti. Students have taken COSC 10 and COSC 30, so they know Java, basic data structures, and discrete math — but rigorous algorithm design and formal proof techniques may be new territory. Your job is to build genuine mathematical intuition, not just procedure-following. Start from first principles. Before introducing notation or pseudocode, explain *why* an algorithm works at an intuitive level. Write in full, connected paragraphs that flow naturally — not bullet points and not terse outlines. Explanations should feel like a brilliant TA who actually understands the proofs walking through them carefully. Use pseudocode (language-agnostic) or Python for code examples. Always explain *why* a design choice works — especially for greedy correctness arguments, dynamic programming subproblem structure, and divide-and-conquer recurrences. For graph algorithms, always ground the explanation in the graph structure before the pseudocode. Key course topics include: asymptotic analysis (Big-O, Θ, Ω), the Master Theorem, divide-and-conquer (merge sort, quicksort, Karatsuba), linear-time selection (Quickselect and median-of-medians), greedy algorithms (activity selection, Huffman coding, MST via Kruskal and Prim), Dijkstra's algorithm, dynamic programming (Bellman-Ford, Floyd-Warshall, longest common subsequence, knapsack, edit distance), graph algorithms (DFS, BFS, topological sort, strongly connected components via Kosaraju or Tarjan), network flow and max-flow/min-cut, amortized analysis, randomized algorithms, Union-Find with path compression, and algorithm correctness via loop invariants. You are a tutor, not a homework service. If a student asks you to solve what appears to be a specific problem set question, do not provide a complete solution. Instead, identify the underlying technique, explain it clearly, and walk through a similar, self-contained example. Guide them to the answer through understanding — never hand it to them directly.`,
     suggested: [
       "Asymptotic Notation & Big-O", "Master Theorem", "Divide & Conquer",
-      "Merge Sort & Quicksort", "Greedy Algorithms", "Minimum Spanning Trees (Kruskal & Prim)",
+      "Merge Sort & Quicksort", "Linear-Time Selection (Quickselect)",
+      "Greedy Algorithms", "Minimum Spanning Trees (Kruskal & Prim)",
       "Dijkstra's Shortest Path", "Dynamic Programming", "Bellman-Ford Algorithm",
-      "Network Flow & Max-Flow", "Graph DFS & Topological Sort", "Union-Find",
+      "Floyd-Warshall All-Pairs Shortest Paths",
+      "Graph DFS, BFS & Topological Sort", "Strongly Connected Components",
+      "Network Flow & Max-Flow", "Union-Find",
+      "Algorithm Correctness & Loop Invariants",
       "Amortized Analysis", "Randomized Algorithms", "NP-Completeness",
     ],
   },
@@ -69,30 +77,54 @@ const COURSES = {
 const COURSE = COURSES[import.meta.env.VITE_COURSE_ID] || COURSES.cosc77;
 const { system: SYSTEM, suggested: SUGGESTED, label: COURSE_LABEL, title: COURSE_TITLE, subtitle: COURSE_SUBTITLE, codeLanguage: CODE_LANG } = COURSE;
 
-async function callAPI(messages, system, maxTokens = 1500, attempt = 0) {
+async function callAPI(messages, system, maxTokens = 1500, attempt = 0, model = MODEL) {
   const res = await fetch(API, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ model: MODEL, max_tokens: maxTokens, system, messages }),
+    body: JSON.stringify({ model, max_tokens: maxTokens, system, messages }),
   });
   if (res.status === 429 && attempt < 3) {
     const wait = (attempt + 1) * 8000;
     await new Promise(r => setTimeout(r, wait));
-    return callAPI(messages, system, maxTokens, attempt + 1);
+    return callAPI(messages, system, maxTokens, attempt + 1, model);
   }
   if (!res.ok) throw new Error("API error " + res.status);
   const d = await res.json();
   return d.content[0].text;
 }
 
-async function askJSON(messages, extra, maxTokens = 1500) {
+async function askJSON(messages, extra, maxTokens = 1500, model = MODEL) {
   const sys = SYSTEM + " " + (extra || "") + " Respond ONLY with raw valid JSON — no markdown fences, no preamble, no trailing text after the closing brace or bracket.";
-  return callAPI(messages, sys, maxTokens);
+  return callAPI(messages, sys, maxTokens, 0, model);
 }
 
 async function askProse(messages, maxTokens = 1400) {
   return callAPI(messages, SYSTEM, maxTokens);
 }
+
+const COSC77_TOPIC_MAP = {
+  "ray tracing": "ray tracing algorithm computer graphics tutorial",
+  "ray-object intersection": "ray sphere intersection ray tracing implementation",
+  "rasterization": "rasterization pipeline computer graphics explained",
+  "phong": "phong illumination model shading computer graphics tutorial",
+  "geometric transform": "3D geometric transformations rotation scale translation matrix",
+  "rotation": "3D rotation matrix computer graphics tutorial",
+  "perspective projection": "perspective projection matrix computer graphics tutorial",
+  "orthographic projection": "orthographic projection computer graphics tutorial",
+  "homogeneous coordinates": "homogeneous coordinates computer graphics explained",
+  "texture mapping": "texture mapping UV coordinates computer graphics tutorial",
+  "uv coordinates": "UV mapping texture coordinates computer graphics",
+  "parametric curves": "parametric curves bezier splines computer graphics tutorial",
+  "bezier": "bezier curves computer graphics tutorial",
+  "subdivision surfaces": "subdivision surfaces catmull clark computer graphics",
+  "z-buffer": "z buffer depth buffer computer graphics tutorial",
+  "visible surface": "visible surface determination z buffer computer graphics",
+  "barycentric coordinates": "barycentric coordinates triangle rasterization tutorial",
+  "rigging": "rigging skinning character animation computer graphics",
+  "rendering equation": "rendering equation global illumination computer graphics",
+  "reflection": "reflection refraction ray tracing computer graphics",
+  "refraction": "refraction snells law ray tracing computer graphics",
+};
 
 const COSC31_TOPIC_MAP = {
   "master theorem": "master theorem recurrences algorithms explained",
@@ -115,6 +147,14 @@ const COSC31_TOPIC_MAP = {
   "np-completeness": "NP completeness P NP problem computer science",
   "asymptotic notation": "big O notation asymptotic analysis tutorial",
   "huffman coding": "huffman coding greedy algorithm tutorial",
+  "strongly connected components": "strongly connected components kosaraju tarjan algorithm tutorial",
+  "scc": "strongly connected components kosaraju algorithm tutorial",
+  "floyd-warshall": "floyd warshall all pairs shortest path algorithm tutorial",
+  "bfs": "breadth first search graph algorithm tutorial",
+  "breadth first": "breadth first search algorithm tutorial",
+  "linear-time selection": "quickselect median of medians linear time selection algorithm",
+  "quickselect": "quickselect algorithm linear time selection tutorial",
+  "loop invariant": "loop invariant algorithm correctness proof tutorial",
 };
 
 const COSC50_TOPIC_MAP = {
@@ -147,6 +187,12 @@ function youtubeQuery(topic) {
     const match = Object.keys(COSC31_TOPIC_MAP).find(k => lower.includes(k));
     if (match) return COSC31_TOPIC_MAP[match];
     return topic + " algorithm explained tutorial";
+  }
+  if (COURSE.id === "cosc77") {
+    const lower = topic.toLowerCase();
+    const match = Object.keys(COSC77_TOPIC_MAP).find(k => lower.includes(k));
+    if (match) return COSC77_TOPIC_MAP[match];
+    return topic + " computer graphics tutorial";
   }
   return topic + " " + CODE_LANG + " explained";
 }
@@ -349,7 +395,7 @@ Paragraph 3 — A fully worked concrete example with real numbers or explicit sy
 
 Paragraph 4 — Why this matters. When does this show up in practice? What goes wrong if someone misunderstands this?
 
-Be thorough. ${COURSE.id === "cosc50" ? "Assume C syntax knowledge. Use code and memory examples." : COURSE.id === "cosc10" ? "Assume Java syntax knowledge. Use Java examples." : COURSE.id === "cosc31" ? "Assume discrete math and basic data structures knowledge. Use pseudocode or Python. Show formal correctness arguments where relevant." : "Assume nothing except basic algebra."}`
+Be thorough. ${COURSE.id === "cosc50" ? "Assume C syntax knowledge. Use code and memory examples." : COURSE.id === "cosc10" ? "Assume Java syntax knowledge. Use Java examples." : COURSE.id === "cosc31" ? "Assume discrete math and basic data structures knowledge. Use pseudocode or Python. Show formal correctness arguments where relevant." : COURSE.id === "cosc77" ? "Assume linear algebra knowledge (matrix multiplication, dot/cross products) and C++ basics. Use C++ or GLSL examples. Connect geometry and optics before equations." : "Assume nothing except basic algebra."}`
       }], 1000);
       setContent(text);
     } catch { setContent("Couldn't load explanation. Please try again."); }
@@ -583,21 +629,27 @@ function ChatPanel({ topic, sections, questions, answers, results, followUpText,
       ? ["What happens in memory when this runs?", "Show me a minimal C example", "What undefined behavior should I watch for?", "How would I debug this with gdb?"]
       : COURSE.id === "cosc31"
       ? ["Walk me through the correctness proof", "What's the worst-case complexity and why?", "When would this algorithm fail or be suboptimal?", "Show me a concrete small example traced step by step"]
-      : ["Derive this from scratch for me", "When would this break down in practice?", "What's the key insight I need to remember?", "How does this connect to gradient descent?"]),
+      : COURSE.id === "cosc77"
+      ? ["Show me the math of a concrete example", "How does the rasterization pipeline handle this?", "What's the physical/geometric intuition here?", "Connect this to what I know about matrix transforms"]
+      : ["Derive this from scratch for me", "When would this break down in practice?", "What's the key insight I need to remember?", "How does this connect to the bigger picture?"]),
     quiz: COURSE.id === "cosc10"
       ? ["Help me think through this without giving the answer", "What Java concept is this really testing?", "Can you remind me of the syntax?", "What should I trace through to solve this?"]
       : COURSE.id === "cosc50"
       ? ["Help me think through this without giving the answer", "What should the memory layout look like?", "What C concept is this really testing?", "Walk me through the approach step by step"]
       : COURSE.id === "cosc31"
       ? ["Help me set up the recurrence without solving it", "What algorithm design technique applies here?", "What's the key invariant I need to identify?", "Walk me through the approach without giving the answer"]
+      : COURSE.id === "cosc77"
+      ? ["Help me think through this without giving the answer", "What transformation matrix is involved here?", "What's the geometric intuition behind this?", "Walk me through the approach step by step"]
       : ["Help me set up the math without solving it", "What formula or concept should I start with?", "What's the intuition behind this question?", "Walk me through the approach step by step"],
     grade: ["Why did I get that wrong?", "Explain Q" + (results?.results?.findIndex(r => r.score < 1) + 1 || 1) + " to me from scratch", "What's the right mental model here?", "Give me a similar practice problem"],
     followup: COURSE.id === "cosc10"
       ? ["Show me a clean Java example of this", "Try explaining it from a completely different angle", "What's the one thing I need to get right?", "What would this look like on a CS 10 exam?"]
       : COURSE.id === "cosc50"
-      ? ["Show me a clean C example from scratch", "Try explaining it from a completely different angle", "How would Valgrind catch a bug here?", "What would a correct implementation look like?"]
+      ? ["Show me a clean C example from scratch", "Try explaining it from a completely different angle", "How would Valgrind catch a bug here?", "What would a COSC 50 lab question look like here?"]
       : COURSE.id === "cosc31"
       ? ["Trace through the algorithm on a small example", "What's the formal proof sketch I should know?", "How does this compare to the alternative approaches?", "What would a COSC 31 exam question look like here?"]
+      : COURSE.id === "cosc77"
+      ? ["Show me a minimal C++ or GLSL example", "Try explaining it from a different geometric angle", "What's the tradeoff vs the alternative approach?", "What would a COSC 77 assignment question look like here?"]
       : ["Show me a clean worked example", "Try explaining it from a completely different angle", "What's the one thing I need to nail this?", "What would a perfect exam answer look like?"],
     done: ["What's the single most important thing to remember?", "What should I study next?", "Give me a harder practice problem", "How might this show up on an exam?"],
   };
@@ -797,7 +849,7 @@ function HelpView() {
     <div style={{ maxWidth: "800px" }}>
       <Section title="The Study Flow">
         <Item label="1. Pick a topic">Type anything or click a suggested chip, then hit Start Lesson.</Item>
-        <Item label="2. Read the lesson">4 sections: intuition, mechanics, worked example, pitfalls. Click any bolded term for a deep dive.</Item>
+        <Item label="2. Read the lesson">6 sections: intuition, mechanics, worked example, pitfalls, practical applications, and connections. Click any bolded term for a deep dive.</Item>
         <Item label="3. Code examples">Click Show example code under any section for a runnable example. Copy button included.</Item>
         <Item label="4. Take the quiz">5 questions — conceptual, computational, and synthesis. Show your work.</Item>
         <Item label="5. Review results">Per-question feedback, strong/weak areas, and a targeted re-explanation of missed concepts.</Item>
@@ -1100,7 +1152,7 @@ const Btn = ({ label, onClick, primary = true, disabled = false }) => (
   </button>
 );
 
-const COURSE_LABELS = { cosc77: "COSC 77 — Machine Learning", cosc10: "COSC 10 — OOP", cosc50: "COSC 50 — Systems", cosc31: "COSC 31 — Algorithms" };
+const COURSE_LABELS = { cosc77: "COSC 77 — Computer Graphics", cosc10: "COSC 10 — OOP", cosc50: "COSC 50 — Systems", cosc31: "COSC 31 — Algorithms" };
 
 function AdminView({ user }) {
   const [data, setData] = useState(null);
@@ -1250,10 +1302,10 @@ function SignInView({ onSignedIn }) {
 
   const features = COURSE.id === "cosc77"
     ? [
-        { icon: "📐", label: "Deep lessons", desc: "First-principles explanations, not bullet points" },
-        { icon: "🔬", label: "Formula sheet", desc: "Auto-built from every lesson you study" },
-        { icon: "🎯", label: "Adaptive quizzing", desc: "Graded answers with targeted follow-ups" },
-        { icon: "🔁", label: "Spaced repetition", desc: "AI-generated review questions on weak spots" },
+        { icon: "🔺", label: "Pipeline to pixel", desc: "Ray tracing and rasterization explained from physics up" },
+        { icon: "📐", label: "Math from geometry", desc: "Transforms, projections, and shading derived intuitively" },
+        { icon: "🎯", label: "Adaptive quizzing", desc: "Graded questions with targeted follow-ups" },
+        { icon: "🔁", label: "Spaced repetition", desc: "AI-generated review on your weak spots" },
       ]
     : COURSE.id === "cosc50"
     ? [
@@ -1509,21 +1561,26 @@ Return JSON with exactly this structure — sections array only, no other keys:
 
 IMPORTANT: prose must be real paragraph text, not placeholder instructions. keyItems: always include 2-3 per section. For each item set type to exactly "formula" or "definition". Use "formula" for: Big-O expressions (O(n log n), O(n²)), recurrence relations (T(n) = 2T(n/2) + O(n)), mathematical equations (h(k) = k mod m, load factor λ = n/m), complexity bounds, and any symbolic expression. Use "definition" for conceptual terms with no symbolic form. Never return an empty array.`;
 
-    const [r1, r2, ytVideos] = await Promise.all([
+    const [r1, r2, r3, ytVideos] = await Promise.all([
       askJSON([{ role: "user", content: sectionPrompt([
         ["intro", "What this is and why it matters", "Start with a real-world problem this topic solves. Explain the concept in plain English before any notation. Use analogy if helpful."],
         ["mechanics", "How it actually works", "Build up mechanics step by step. Introduce notation after intuition is clear. Explain what each symbol means and where it comes from."],
-      ]) }], "", 1800),
+      ]) }], "", 2400, MODEL_OPUS),
       askJSON([{ role: "user", content: sectionPrompt([
         ["example", "A concrete worked example", "Walk through a full numerical example step by step. Explain what you are doing AND why at each stage — not just algebra."],
         ["pitfalls", "Where people get confused", "Pick the 2-3 places where students most commonly get stuck, make wrong assumptions, or need a second explanation. For each: name the specific confusion precisely (not vaguely), explain *why* it's a natural mistake to make, then give the corrected mental model in plain English. End with the single most important thing to hold onto — the insight that makes everything click."],
-      ]) }], "", 1800),
+      ]) }], "", 2400, MODEL_OPUS),
+      askJSON([{ role: "user", content: sectionPrompt([
+        ["applications", "Practical applications", "Show 2-3 real, concrete contexts where this concept is used in practice — not toy examples. For each: name the domain, explain exactly how this topic appears, and say what breaks without it."],
+        ["connections", "Connections and extensions", "Connect this topic to 2-3 other concepts the student may already know or will encounter soon. Explain precisely how they relate — how one generalizes another, or how they combine. End with one extension or open question that pushes beyond the basics."],
+      ]) }], "", 2400, MODEL_OPUS),
       fetchYouTubeVideos(expanded).catch(() => []),
     ]);
 
     const s1 = parseJSON(r1).sections || [];
     const s2 = parseJSON(r2).sections || [];
-    const allSecs = [...s1, ...s2];
+    const s3 = parseJSON(r3).sections || [];
+    const allSecs = [...s1, ...s2, ...s3];
     setSections(allSecs);
     setVideos(ytVideos);
     // Collect key items into formula sheet
@@ -1551,14 +1608,15 @@ IMPORTANT: prose must be real paragraph text, not placeholder instructions. keyI
         body: JSON.stringify({ sessionToken: user.sessionToken, courseId: COURSE.id, topic: expanded }),
       }).catch(() => {});
     }
-  }, "Building your lesson… (takes 20–30 seconds)"); };
+  }, "Building your lesson… (takes 30–45 seconds)"); };
 
   const doQuiz = () => wrap(async () => {
     const summary = sections.map(s => s.title + ": " + (s.prose || "").slice(0, 300)).join("\n\n");
     const synthesisDesc = COURSE.id === "cosc50" ? "connect to systems programming or C in practice"
       : COURSE.id === "cosc10" ? "connect to Java, OOP, or software design"
       : COURSE.id === "cosc31" ? "connect to algorithm complexity, correctness proofs, or compare with an alternative algorithm"
-      : "connect to broader ML or CS";
+      : COURSE.id === "cosc77" ? "connect two or more graphics pipeline stages, or explain a tradeoff between rasterization and ray tracing"
+      : "connect to broader CS";
     const raw = await askJSON([{
       role: "user",
       content: `Based on this lesson about "${topic}":\n\n${summary}\n\nGenerate 5 quiz questions. 2 conceptual (intuition/definition, no calculation), 2 computational (show your work), 1 synthesis (${synthesisDesc}). Make them specific to the lesson. Return JSON array:\n[{"id":1,"question":"...","difficulty":"easy|medium|hard","type":"conceptual|computational|synthesis"}]`,

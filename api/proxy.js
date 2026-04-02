@@ -1,6 +1,7 @@
 import { kv } from "./_kv.js";
 
-const MODEL = "claude-sonnet-4-6";
+const DEFAULT_MODEL = "claude-sonnet-4-6";
+const ALLOWED_MODELS = ["claude-sonnet-4-6", "claude-opus-4-6"];
 const RATE_LIMIT = 20; // requests per minute per IP
 
 export default async function handler(req, res) {
@@ -15,6 +16,8 @@ export default async function handler(req, res) {
     if (count > RATE_LIMIT) return res.status(429).json({ error: "Rate limit exceeded" });
   } catch {}
 
+  const model = ALLOWED_MODELS.includes(req.body.model) ? req.body.model : DEFAULT_MODEL;
+
   const upstream = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: {
@@ -22,7 +25,7 @@ export default async function handler(req, res) {
       "x-api-key": process.env.ANTHROPIC_KEY,
       "anthropic-version": "2023-06-01",
     },
-    body: JSON.stringify({ ...req.body, model: MODEL }),
+    body: JSON.stringify({ ...req.body, model }),
   });
 
   const data = await upstream.json();
