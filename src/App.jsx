@@ -201,33 +201,42 @@ function youtubeQuery(topic) {
   return topic + " " + CODE_LANG + " explained";
 }
 
-async function fetchYouTubeVideos(topic) {
+async function fetchYouTubeVideos(topic, attempt = 0) {
   const key = import.meta.env.VITE_YOUTUBE_KEY;
   if (!key) { console.warn("YouTube: VITE_YOUTUBE_KEY not set"); return []; }
   const q = youtubeQuery(topic);
-  const searchRes = await fetch(
-    `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(q)}&type=video&maxResults=10&key=${key}`
-  );
-  if (!searchRes.ok) { console.warn("YouTube search failed:", searchRes.status, await searchRes.text().catch(() => "")); return []; }
-  const searchData = await searchRes.json();
-  if (searchData.error) { console.warn("YouTube search error:", searchData.error.message); return []; }
-  const ids = (searchData.items || []).map(i => i.id.videoId).join(",");
-  if (!ids) return [];
-  const statsRes = await fetch(
-    `https://www.googleapis.com/youtube/v3/videos?part=statistics,snippet&id=${ids}&key=${key}`
-  );
-  if (!statsRes.ok) return [];
-  const statsData = await statsRes.json();
-  return (statsData.items || [])
-    .sort((a, b) => Number(b.statistics.viewCount) - Number(a.statistics.viewCount))
-    .slice(0, 2)
-    .map(v => ({
-      id: v.id,
-      title: v.snippet.title,
-      channel: v.snippet.channelTitle,
-      views: Number(v.statistics.viewCount),
-      thumbnail: v.snippet.thumbnails.medium.url,
-    }));
+  try {
+    const searchRes = await fetch(
+      `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(q)}&type=video&maxResults=10&key=${key}`
+    );
+    if (!searchRes.ok) throw new Error(`search HTTP ${searchRes.status}`);
+    const searchData = await searchRes.json();
+    if (searchData.error) throw new Error(searchData.error.message);
+    const ids = (searchData.items || []).map(i => i.id.videoId).join(",");
+    if (!ids) return [];
+    const statsRes = await fetch(
+      `https://www.googleapis.com/youtube/v3/videos?part=statistics,snippet&id=${ids}&key=${key}`
+    );
+    if (!statsRes.ok) throw new Error(`stats HTTP ${statsRes.status}`);
+    const statsData = await statsRes.json();
+    return (statsData.items || [])
+      .sort((a, b) => Number(b.statistics.viewCount) - Number(a.statistics.viewCount))
+      .slice(0, 2)
+      .map(v => ({
+        id: v.id,
+        title: v.snippet.title,
+        channel: v.snippet.channelTitle,
+        views: Number(v.statistics.viewCount),
+        thumbnail: v.snippet.thumbnails.medium.url,
+      }));
+  } catch (e) {
+    if (attempt < 2) {
+      await new Promise(r => setTimeout(r, (attempt + 1) * 2000));
+      return fetchYouTubeVideos(topic, attempt + 1);
+    }
+    console.warn("YouTube failed after retries:", e.message);
+    return [];
+  }
 }
 
 const stor = {
