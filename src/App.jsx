@@ -12,7 +12,7 @@ const COURSES = {
     label: "Dartmouth COSC 77",
     title: "Darby",
     subtitle: "Ray tracing · Rasterization · Shading · Geometric transforms",
-    codeLanguage: "C++/GLSL",
+    codeLanguage: "JavaScript",
     system: `Your name is Darby. You are a patient, thorough tutor for a Dartmouth CS student taking COSC 77 (Computer Graphics), taught by Wojciech Jarosz in Spring 2026. Your job is to build genuine understanding of how images are computed from mathematics and geometry — not just to cover material. Students have taken COSC 50 (systems/C) and linear algebra, so they understand pointers, memory, and matrix operations — but the graphics pipeline, shading models, and ray tracing may be entirely new territory. Start from first principles. Before introducing GLSL, WebGL, or C++ code, explain the geometric or optical intuition in plain English. Write in full, connected paragraphs that flow naturally — not bullet points and not terse outlines. Explanations should feel like a brilliant TA who has implemented a ray tracer from scratch explaining something carefully. Use C++ or GLSL for code examples where relevant. Always explain *why* something works — especially for coordinate transforms, the rendering equation, barycentric coordinates, and the rasterization pipeline — before showing how to implement it. For matrix transforms, always derive what the matrix is doing geometrically before writing it out. For shading, start from the physics of light before the math. Key course topics include: digital image representation and color models, 2D and 3D geometric transformations (rotation, scale, translation, perspective and parallel projection), homogeneous coordinates, shape representations (parametric curves and surfaces, polygon meshes, subdivision surfaces), the rasterization pipeline (vertex processing, clipping, scan conversion, z-buffering), ray tracing (ray-object intersection, reflection, refraction, shadows), illumination models (ambient, diffuse, specular, the Phong model, the rendering equation), texture mapping (UV mapping, bilinear interpolation, mipmapping), visible surface determination, light and visual perception, and rigging and skinning for animation. You are a tutor, not a homework service. If a student asks you to solve what appears to be a specific assignment or project question, do not provide a complete solution. Instead, identify the underlying concept, explain it clearly, and walk through a similar, self-contained example. Guide them to the answer through understanding — never hand it to them directly.`,
     suggested: [
       "Ray Tracing & Ray-Object Intersection", "Rasterization Pipeline",
@@ -76,6 +76,7 @@ const COURSES = {
 
 const COURSE = COURSES[import.meta.env.VITE_COURSE_ID] || COURSES.cosc77;
 const { system: SYSTEM, suggested: SUGGESTED, label: COURSE_LABEL, title: COURSE_TITLE, subtitle: COURSE_SUBTITLE, codeLanguage: CODE_LANG } = COURSE;
+const SNIPPET_LANGS = ["Python", "Java", "JavaScript", "C", "C++"];
 
 async function callAPI(messages, system, maxTokens = 1500, attempt = 0, model = MODEL, opts = {}) {
   const body = { model, max_tokens: maxTokens, system, messages };
@@ -467,27 +468,32 @@ Be thorough. ${COURSE.id === "cosc50" ? "Assume C syntax knowledge. Use code and
 
 function CodeSnippet({ section, topic }) {
   const [open, setOpen] = useState(false);
-  const [code, setCode] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [selectedLang, setSelectedLang] = useState(CODE_LANG);
+  const [codeByLang, setCodeByLang] = useState({});
+  const [loadingLang, setLoadingLang] = useState(null);
   const [copied, setCopied] = useState(false);
 
+  const currentCode = codeByLang[selectedLang] || "";
+
   const copyCode = () => {
-    navigator.clipboard.writeText(code).then(() => {
+    navigator.clipboard.writeText(currentCode).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     });
   };
 
-  const load = async () => {
-    if (code) { setOpen(o => !o); return; }
+  const loadLang = async (lang) => {
+    setCopied(false);
+    setSelectedLang(lang);
     setOpen(true);
-    setLoading(true);
+    if (codeByLang[lang]) return;
+    setLoadingLang(lang);
     try {
       const text = await askProse([{
         role: "user",
         content: `We're studying "${topic}", specifically the section "${section.title}".
 
-Write a concise, focused ${CODE_LANG} code example that directly illustrates the core concept from this section. Requirements:
+Write a concise, focused ${lang} code example that directly illustrates the core concept from this section. Requirements:
 - Runnable, self-contained code (no missing imports or dependencies)
 - Every non-obvious line has a short inline comment explaining *why*, not just what
 - 15-35 lines — tight and purposeful, no padding
@@ -495,27 +501,49 @@ Write a concise, focused ${CODE_LANG} code example that directly illustrates the
 
 Return ONLY the code block, no prose before or after.`
       }]);
-      // Strip markdown fences if present
-      setCode(text.replace(/^```[^\n]*\n?/m, "").replace(/```$/m, "").trim());
-    } catch { setCode("// Could not load example — please try again."); }
-    setLoading(false);
+      const clean = text.replace(/^```[^\n]*\n?/m, "").replace(/```$/m, "").trim();
+      setCodeByLang(prev => ({ ...prev, [lang]: clean }));
+    } catch {
+      setCodeByLang(prev => ({ ...prev, [lang]: `// Could not load ${lang} example — please try again.` }));
+    }
+    setLoadingLang(null);
+  };
+
+  const handleMainButton = () => {
+    if (open) { setOpen(false); } else { loadLang(CODE_LANG); }
   };
 
   return (
     <div style={{ marginTop: "0.75rem" }}>
-      <button onClick={load} style={{ display: "flex", alignItems: "center", gap: "6px", padding: "5px 11px", fontSize: "11px", fontWeight: 600, background: open ? "#1e1e1e" : "var(--color-background-secondary)", color: open ? "#a8d8a8" : "var(--color-text-secondary)", border: open ? "none" : "0.5px solid var(--color-border-tertiary)", borderRadius: "var(--border-radius-md)", cursor: "pointer" }}>
-        {loading ? "loading…" : open ? `Hide example code (${CODE_LANG}) ×` : `Show example code (${CODE_LANG}) →`}
+      <button onClick={handleMainButton} style={{ display: "flex", alignItems: "center", gap: "6px", padding: "5px 11px", fontSize: "11px", fontWeight: 600, background: open ? "#1e1e1e" : "var(--color-background-secondary)", color: open ? "#a8d8a8" : "var(--color-text-secondary)", border: open ? "none" : "0.5px solid var(--color-border-tertiary)", borderRadius: "var(--border-radius-md)", cursor: "pointer" }}>
+        {loadingLang === CODE_LANG && !open ? "loading…" : open ? "× Hide code" : `Show ${CODE_LANG} code →`}
       </button>
       {open && (
         <div style={{ marginTop: "6px", borderRadius: "var(--border-radius-md)", background: "#1e1e1e", overflow: "hidden", maxWidth: "100%" }}>
-          {loading
-            ? <div style={{ padding: "1rem", display: "flex", alignItems: "center", gap: "10px" }}><LoadDots /><span style={{ fontSize: "12px", color: "var(--mint)" }}>Generating example…</span></div>
-            : <>
-                <div style={{ display: "flex", justifyContent: "flex-end", padding: "4px 8px 0" }}>
-                  <button onClick={copyCode} style={{ background: "none", border: "0.5px solid rgba(255,255,255,0.2)", borderRadius: "4px", color: copied ? "var(--mint)" : "rgba(255,255,255,0.45)", fontSize: "11px", padding: "2px 9px", cursor: "pointer" }}>{copied ? "Copied!" : "Copy"}</button>
-                </div>
-                <pre style={{ margin: 0, padding: "0.5rem 1.25rem 1rem", fontSize: "12.5px", lineHeight: "1.65", color: "#d4d4d4", fontFamily: "var(--font-mono,monospace)", overflowX: "auto", whiteSpace: "pre" }}>{code}</pre>
-              </>}
+          <div style={{ display: "flex", gap: "2px", padding: "8px 10px 4px", borderBottom: "0.5px solid rgba(255,255,255,0.08)", flexWrap: "wrap" }}>
+            {SNIPPET_LANGS.map(lang => (
+              <button key={lang} onClick={() => loadLang(lang)} style={{
+                padding: "3px 10px", fontSize: "11px", fontWeight: 600,
+                background: selectedLang === lang ? "rgba(255,255,255,0.14)" : "transparent",
+                color: selectedLang === lang ? "#a8d8a8" : "rgba(255,255,255,0.4)",
+                border: selectedLang === lang ? "0.5px solid rgba(255,255,255,0.22)" : "0.5px solid transparent",
+                borderRadius: "4px", cursor: "pointer",
+              }}>
+                {lang}{loadingLang === lang ? " …" : ""}
+              </button>
+            ))}
+          </div>
+          {loadingLang === selectedLang
+            ? <div style={{ padding: "1rem", display: "flex", alignItems: "center", gap: "10px" }}><LoadDots /><span style={{ fontSize: "12px", color: "var(--mint)" }}>Generating {selectedLang} example…</span></div>
+            : currentCode
+              ? <>
+                  <div style={{ display: "flex", justifyContent: "flex-end", padding: "4px 8px 0" }}>
+                    <button onClick={copyCode} style={{ background: "none", border: "0.5px solid rgba(255,255,255,0.2)", borderRadius: "4px", color: copied ? "var(--mint)" : "rgba(255,255,255,0.45)", fontSize: "11px", padding: "2px 9px", cursor: "pointer" }}>{copied ? "Copied!" : "Copy"}</button>
+                  </div>
+                  <pre style={{ margin: 0, padding: "0.5rem 1.25rem 1rem", fontSize: "12.5px", lineHeight: "1.65", color: "#d4d4d4", fontFamily: "var(--font-mono,monospace)", overflowX: "auto", whiteSpace: "pre" }}>{currentCode}</pre>
+                </>
+              : <div style={{ padding: "1rem", display: "flex", alignItems: "center", gap: "10px" }}><LoadDots /><span style={{ fontSize: "12px", color: "var(--mint)" }}>Generating {selectedLang} example…</span></div>
+          }
         </div>
       )}
     </div>
