@@ -311,11 +311,11 @@ function CodeBlock({ lang, code }) {
 
 function ProseParagraphs({ text, size }) {
   if (!text) return null;
-  const segments = text.split(/(```[\w]*\n[\s\S]*?```)/g);
+  const segments = text.split(/(```[^\n]*\n[\s\S]*?```)/g);
   return (
     <div>
       {segments.map((seg, i) => {
-        const codeMatch = seg.match(/^```([\w]*)\n([\s\S]*?)```$/);
+        const codeMatch = seg.match(/^```(\w*)[^\n]*\n([\s\S]*?)```$/);
         if (codeMatch) return <CodeBlock key={i} lang={codeMatch[1]} code={codeMatch[2]} />;
         return seg.split(/\n\n+/).map((para, j) => {
           const t = para.trim();
@@ -458,7 +458,7 @@ Write a concise, focused ${CODE_LANG} code example that directly illustrates the
 Return ONLY the code block, no prose before or after.`
       }]);
       // Strip markdown fences if present
-      setCode(text.replace(/^```[\w]*\n?/m, "").replace(/```$/m, "").trim());
+      setCode(text.replace(/^```[^\n]*\n?/m, "").replace(/```$/m, "").trim());
     } catch { setCode("// Could not load example — please try again."); }
     setLoading(false);
   };
