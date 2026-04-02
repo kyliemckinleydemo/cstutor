@@ -263,11 +263,14 @@ function repairJSON(raw) {
 }
 
 function parseJSON(raw) {
-  const clean = raw.replace(/```json|```/g, "").trim();
-  // First try direct parse
-  try { return JSON.parse(clean); } catch {}
-  // Try extracting outermost object/array
-  const m = clean.match(/(\{[\s\S]*\}|\[[\s\S]*\])/);
+  const trimmed = raw.trim();
+  // Try direct parse first — preserves code blocks inside string values (e.g. diagrams)
+  try { return JSON.parse(trimmed); } catch {}
+  // Strip only outer markdown fences if Claude wrapped the response in ```json ... ```
+  const fenced = trimmed.replace(/^```(?:json)?\s*\n/, "").replace(/\n```\s*$/, "").trim();
+  try { return JSON.parse(fenced); } catch {}
+  // Extract outermost object/array
+  const m = fenced.match(/(\{[\s\S]*\}|\[[\s\S]*\])/);
   if (m) { try { return JSON.parse(m[0]); } catch {} }
   // Try repair
   try { return JSON.parse(repairJSON(raw)); } catch {}
