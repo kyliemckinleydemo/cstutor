@@ -981,6 +981,7 @@ function HistoryView({ sessions }) {
 function FormulasView({ formulas, setFormulas }) {
   const [filter, setFilter] = useState("all");
   const [adding, setAdding] = useState(false);
+  const [confirmClear, setConfirmClear] = useState(false);
   const [newType, setNewType] = useState("formula");
   const [newTopic, setNewTopic] = useState("");
   const [newLabel, setNewLabel] = useState("");
@@ -1060,6 +1061,15 @@ function FormulasView({ formulas, setFormulas }) {
         <button onClick={() => { setAdding(a => !a); }} style={{ padding: "6px 16px", fontSize: "12px", fontWeight: 600, borderRadius: "8px", border: "1.5px solid var(--border)", background: adding ? "var(--pine)" : "var(--cream)", color: adding ? "white" : "var(--text-mid)", cursor: "pointer" }}>
           {adding ? "Cancel" : "+ Add entry"}
         </button>
+        {confirmClear ? (
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <span style={{ fontSize: "12px", color: "var(--text-mid)" }}>Delete all {formulas.length} entries?</span>
+            <button onClick={() => { setFormulas([]); setConfirmClear(false); }} style={{ padding: "6px 14px", fontSize: "12px", fontWeight: 600, borderRadius: "8px", border: "none", background: "#c0392b", color: "white", cursor: "pointer" }}>Yes, delete all</button>
+            <button onClick={() => setConfirmClear(false)} style={{ padding: "6px 14px", fontSize: "12px", fontWeight: 600, borderRadius: "8px", border: "1.5px solid var(--border)", background: "var(--cream)", color: "var(--text-mid)", cursor: "pointer" }}>Cancel</button>
+          </div>
+        ) : (
+          <button onClick={() => setConfirmClear(true)} style={{ padding: "6px 16px", fontSize: "12px", fontWeight: 600, borderRadius: "8px", border: "1.5px solid #e8c0bc", background: "var(--cream)", color: "#c0392b", cursor: "pointer" }}>Delete All</button>
+        )}
         <button onClick={() => window.print()} style={{ padding: "6px 16px", fontSize: "12px", fontWeight: 600, borderRadius: "8px", border: "1.5px solid var(--border)", background: "var(--cream)", color: "var(--text-mid)", cursor: "pointer" }}>Print / PDF</button>
       </div>
 
