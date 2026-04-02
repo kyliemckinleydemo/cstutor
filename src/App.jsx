@@ -437,7 +437,7 @@ Paragraph 3 — A fully worked concrete example with real numbers or explicit sy
 
 Paragraph 4 — Why this matters. When does this show up in practice? What goes wrong if someone misunderstands this?
 
-Be thorough. ${COURSE.id === "cosc50" ? "Assume C syntax knowledge. Use code and memory examples." : COURSE.id === "cosc10" ? "Assume Java syntax knowledge. Use Java examples." : COURSE.id === "cosc31" ? "Assume discrete math and basic data structures knowledge. Use pseudocode or Python. Show formal correctness arguments where relevant." : COURSE.id === "cosc77" ? "Assume linear algebra knowledge (matrix multiplication, dot/cross products) and C++ basics. Use C++ or GLSL examples. Connect geometry and optics before equations." : "Assume nothing except basic algebra."}`
+Be thorough. Use ${CODE_LANG} for any code examples.`
       }], 1000);
       setContent(text);
     } catch { setContent("Couldn't load explanation. Please try again."); }
@@ -1639,6 +1639,7 @@ Return JSON with exactly this structure — sections array only, no other keys:
 - keyItems: always include 3-4 per section, never empty; type must be "formula" or "definition"
 - Use "formula" for: Big-O (O(n log n)), recurrences (T(n) = 2T(n/2) + O(n)), equations (h(k) = k mod m), any symbolic expression, matrix notation
 - Use "definition" for conceptual terms with no symbolic form
+- Code: any inline code snippet or short code reference in prose must be written in ${CODE_LANG}
 </rules>`;
 
     const DEEP = { thinking: { type: "enabled", budget_tokens: 8000 } };
@@ -1707,7 +1708,7 @@ Return JSON with exactly this structure — sections array only, no other keys:
       : "connect to broader CS";
     const raw = await askJSON([{
       role: "user",
-      content: `Based on this lesson about "${topic}":\n\n${summary}\n\nGenerate 5 quiz questions. 2 conceptual (intuition/definition, no calculation), 2 computational (show your work), 1 synthesis (${synthesisDesc}). Make them specific to the lesson. Return JSON array:\n[{"id":1,"question":"...","difficulty":"easy|medium|hard","type":"conceptual|computational|synthesis"}]`,
+      content: `Based on this lesson about "${topic}":\n\n${summary}\n\nGenerate 5 quiz questions. 2 conceptual (intuition/definition, no calculation), 2 computational (show your work), 1 synthesis (${synthesisDesc}). Make them specific to the lesson. Any question involving code must use ${CODE_LANG}. Return JSON array:\n[{"id":1,"question":"...","difficulty":"easy|medium|hard","type":"conceptual|computational|synthesis"}]`,
     }]);
     setQuestions(parseJSON(raw)); setAnswers({}); setPhase("quiz");
   }, "Generating quiz…");
@@ -1772,7 +1773,7 @@ ${wrongQA ? `Here is what they got wrong:\n${wrongQA}\n\n` : ""}Return JSON for 
     {
       "id": "${area.toLowerCase().replace(/\s+/g, "_")}",
       "title": "Revisiting: ${area}",
-      "prose": "Write 3 full paragraphs (no bullets): (1) Why this is confusing and what the correct mental model is — address the specific mistake above directly. (2) A fresh explanation from a different angle than a typical textbook. (3) A step-by-step example showing correct application.",
+      "prose": "Write 3 full paragraphs (no bullets): (1) Why this is confusing and what the correct mental model is — address the specific mistake above directly. (2) A fresh explanation from a different angle than a typical textbook. (3) A step-by-step example showing correct application — include a ${CODE_LANG} code example if it aids understanding.",
       "keyItems": [
         { "label": "specific formula or term they likely misunderstood", "context": "what the confusion usually is" }
       ]
