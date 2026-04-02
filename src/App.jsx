@@ -203,12 +203,14 @@ function youtubeQuery(topic) {
 
 async function fetchYouTubeVideos(topic) {
   const key = import.meta.env.VITE_YOUTUBE_KEY;
-  if (!key) return [];
+  if (!key) { console.warn("YouTube: VITE_YOUTUBE_KEY not set"); return []; }
+  const q = youtubeQuery(topic);
   const searchRes = await fetch(
-    `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(youtubeQuery(topic))}&type=video&maxResults=10&key=${key}`
+    `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(q)}&type=video&maxResults=10&key=${key}`
   );
-  if (!searchRes.ok) return [];
+  if (!searchRes.ok) { console.warn("YouTube search failed:", searchRes.status, await searchRes.text().catch(() => "")); return []; }
   const searchData = await searchRes.json();
+  if (searchData.error) { console.warn("YouTube search error:", searchData.error.message); return []; }
   const ids = (searchData.items || []).map(i => i.id.videoId).join(",");
   if (!ids) return [];
   const statsRes = await fetch(
@@ -1943,14 +1945,23 @@ ${wrongQA ? `Here is what they got wrong:\n${wrongQA}\n\n` : ""}Return JSON for 
               </div>
             ))}
           </div>
-          {videos.length > 0 && (
-            <div style={{ marginTop: "1.25rem" }}>
-              <p style={{ fontSize: "11px", fontWeight: 700, letterSpacing: "0.08em", color: "var(--color-text-tertiary)", textTransform: "uppercase", margin: "0 0 0.6rem" }}>Recommended Videos</p>
-              <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
-                {videos.map(v => <VideoCard key={v.id} video={v} />)}
-              </div>
+          <div style={{ marginTop: "1.25rem" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "0.6rem" }}>
+              <p style={{ fontSize: "11px", fontWeight: 700, letterSpacing: "0.08em", color: "var(--color-text-tertiary)", textTransform: "uppercase", margin: 0 }}>Recommended Videos</p>
+              <a href={`https://www.youtube.com/results?search_query=${encodeURIComponent(youtubeQuery(topic))}`} target="_blank" rel="noopener noreferrer"
+                style={{ fontSize: "11px", fontWeight: 600, color: "var(--pine-mid)", textDecoration: "none" }}>
+                Search YouTube →
+              </a>
             </div>
-          )}
+            {videos.length > 0
+              ? <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+                  {videos.map(v => <VideoCard key={v.id} video={v} />)}
+                </div>
+              : <p style={{ fontSize: "13px", color: "var(--text-muted)", margin: 0 }}>
+                  No videos loaded automatically — use the search link above to find videos on this topic.
+                </p>
+            }
+          </div>
           <ChatPanel {...chatProps} />
           <div style={{ display: "flex", justifyContent: "space-between", marginTop: "1.25rem" }}>
             <Btn label="← Change Topic" onClick={() => { setConfirmRegen(false); setPhase("topic"); }} primary={false} />
