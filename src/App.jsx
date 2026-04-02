@@ -77,25 +77,28 @@ const COURSES = {
 const COURSE = COURSES[import.meta.env.VITE_COURSE_ID] || COURSES.cosc77;
 const { system: SYSTEM, suggested: SUGGESTED, label: COURSE_LABEL, title: COURSE_TITLE, subtitle: COURSE_SUBTITLE, codeLanguage: CODE_LANG } = COURSE;
 
-async function callAPI(messages, system, maxTokens = 1500, attempt = 0, model = MODEL) {
+async function callAPI(messages, system, maxTokens = 1500, attempt = 0, model = MODEL, opts = {}) {
+  const body = { model, max_tokens: maxTokens, system, messages };
+  if (opts.thinking) body.thinking = opts.thinking;
   const res = await fetch(API, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ model, max_tokens: maxTokens, system, messages }),
+    body: JSON.stringify(body),
   });
   if (res.status === 429 && attempt < 3) {
     const wait = (attempt + 1) * 8000;
     await new Promise(r => setTimeout(r, wait));
-    return callAPI(messages, system, maxTokens, attempt + 1, model);
+    return callAPI(messages, system, maxTokens, attempt + 1, model, opts);
   }
   if (!res.ok) throw new Error("API error " + res.status);
   const d = await res.json();
-  return d.content[0].text;
+  const block = (d.content || []).find(b => b.type === "text") || d.content[0];
+  return block.text;
 }
 
-async function askJSON(messages, extra, maxTokens = 1500, model = MODEL) {
+async function askJSON(messages, extra, maxTokens = 1500, model = MODEL, opts = {}) {
   const sys = SYSTEM + " " + (extra || "") + " Respond ONLY with raw valid JSON — no markdown fences, no preamble, no trailing text after the closing brace or bracket.";
-  return callAPI(messages, sys, maxTokens, 0, model);
+  return callAPI(messages, sys, maxTokens, 0, model, opts);
 }
 
 async function askProse(messages, maxTokens = 1400) {
@@ -849,7 +852,7 @@ function HelpView() {
     <div style={{ maxWidth: "800px" }}>
       <Section title="The Study Flow">
         <Item label="1. Pick a topic">Type anything or click a suggested chip, then hit Start Lesson.</Item>
-        <Item label="2. Read the lesson">6 sections: intuition, mechanics, worked example, pitfalls, practical applications, and connections. Click any bolded term for a deep dive.</Item>
+        <Item label="2. Read the lesson">6 sections: intuition, mechanics, fully traced example, visual diagram, proof sketch, and clarifications. Click any bolded term for a deep dive.</Item>
         <Item label="3. Code examples">Click Show example code under any section for a runnable example. Copy button included.</Item>
         <Item label="4. Take the quiz">5 questions — conceptual, computational, and synthesis. Show your work.</Item>
         <Item label="5. Review results">Per-question feedback, strong/weak areas, and a targeted re-explanation of missed concepts.</Item>
@@ -1543,37 +1546,56 @@ export default function App() {
     const expanded = expandTopic(topic.trim());
     if (expanded !== topic.trim()) setTopic(expanded);
     setSavedSession(null); return wrap(async () => {
-    const sectionPrompt = (titles) => `Build part of a lesson on "${expanded || topic}" for a smart student who may not know this topic deeply yet.
+    const sectionPrompt = (specs) => `<task>
+Build part of a thorough lesson on "${expanded || topic}" for a Dartmouth CS student in ${COURSE.label}. This is a rigorous course — explanations must be mathematically precise and build genuine understanding.
+</task>
 
+<output_format>
 Return JSON with exactly this structure — sections array only, no other keys:
 {
   "sections": [
-    ${titles.map(([id, title, note]) => `{
+    ${specs.map(([id, title, instruction]) => `{
       "id": "${id}",
       "title": "${title}",
-      "prose": "Write 3 full connected paragraphs (no bullets, no headers inside). ${note} Each paragraph minimum 60 words.",
+      "prose": "${instruction}",
       "keyItems": [
         { "label": "exact formula, expression, or key term", "context": "one sentence explaining what it means or where it comes from", "type": "formula or definition" }
       ]
     }`).join(",\n    ")}
   ]
 }
+</output_format>
 
-IMPORTANT: prose must be real paragraph text, not placeholder instructions. keyItems: always include 2-3 per section. For each item set type to exactly "formula" or "definition". Use "formula" for: Big-O expressions (O(n log n), O(n²)), recurrence relations (T(n) = 2T(n/2) + O(n)), mathematical equations (h(k) = k mod m, load factor λ = n/m), complexity bounds, and any symbolic expression. Use "definition" for conceptual terms with no symbolic form. Never return an empty array.`;
+<rules>
+- prose: Write real lesson content — never return the instruction text itself
+- Length: each section must be substantial — at least 5 full paragraphs, each paragraph at least 80 words; do not truncate
+- No bullet points, no sub-headers inside prose — only flowing connected paragraphs
+- keyItems: always include 3-4 per section, never empty; type must be "formula" or "definition"
+- Use "formula" for: Big-O (O(n log n)), recurrences (T(n) = 2T(n/2) + O(n)), equations (h(k) = k mod m), any symbolic expression, matrix notation
+- Use "definition" for conceptual terms with no symbolic form
+</rules>`;
+
+    const DEEP = { thinking: { type: "enabled", budget_tokens: 8000 } };
 
     const [r1, r2, r3, ytVideos] = await Promise.all([
       askJSON([{ role: "user", content: sectionPrompt([
-        ["intro", "What this is and why it matters", "Start with a real-world problem this topic solves. Explain the concept in plain English before any notation. Use analogy if helpful."],
-        ["mechanics", "How it actually works", "Build up mechanics step by step. Introduce notation after intuition is clear. Explain what each symbol means and where it comes from."],
-      ]) }], "", 2400, MODEL_OPUS),
+        ["intro", "Intuition before the math",
+         "5+ full paragraphs — zero formulas, zero notation, zero code. Paragraph 1: what problem this concept solves and why anyone cared enough to invent it. Paragraph 2: the core idea in terms a curious non-specialist could follow — use a concrete analogy or spatial description, not abstract language. Paragraph 3: what the concept is actually doing at its heart, before any symbols are introduced. Paragraph 4: how to think about this intuitively — what mental picture or physical model to hold. Paragraph 5+: what understanding this unlocks — what questions become easy, what you can see that was opaque before. Do NOT introduce any symbols, formulas, or equations anywhere in this section."],
+        ["mechanics", "The mechanics, derived",
+         "5+ full paragraphs. Build the math or algorithm entirely from scratch by deriving it — never just state formulas. Paragraph 1: start from the intuition and identify what needs to be made precise. Paragraphs 2-4: introduce each symbol or operation as you first need it — name it, say exactly where it comes from, explain what it measures or does — then show the reasoning that forces each formula or algorithmic choice to be what it is. Paragraph 5+: synthesize the full picture — what the complete formula or algorithm looks like and why every piece is necessary. A student who reads this section should be able to reconstruct the approach on their own without looking anything up."],
+      ]) }], "", 16000, MODEL_OPUS, DEEP),
       askJSON([{ role: "user", content: sectionPrompt([
-        ["example", "A concrete worked example", "Walk through a full numerical example step by step. Explain what you are doing AND why at each stage — not just algebra."],
-        ["pitfalls", "Where people get confused", "Pick the 2-3 places where students most commonly get stuck, make wrong assumptions, or need a second explanation. For each: name the specific confusion precisely (not vaguely), explain *why* it's a natural mistake to make, then give the corrected mental model in plain English. End with the single most important thing to hold onto — the insight that makes everything click."],
-      ]) }], "", 2400, MODEL_OPUS),
+        ["example", "A fully traced example",
+         "5+ full paragraphs. Choose a concrete case with real numbers or explicit symbols — not a toy, but a case rich enough to show the full behavior. Paragraph 1: set up the problem and state what you are going to compute and why. Paragraphs 2-4: work through the ENTIRE process step by step — at every step say WHAT you are doing AND WHY, not just the algebra; show intermediate values and what they mean. Paragraph 5+: reflect on what the example reveals — what would change with different inputs, what edge cases exist, what the result tells you about the concept. A student should finish this section able to apply the procedure to a new input without any further help."],
+        ["diagram", "A visual diagram",
+         "Open this section with an ASCII diagram placed inside a code block. Begin the code block with three backticks followed immediately by the word diagram on the same line, then the diagram content on the lines following, then three backticks to close. Make the diagram 20-40 lines; label every significant element with text annotations. For graphics topics: draw the 3D/2D geometric setup — label coordinate axes, vectors, normals, rays with origin and direction, angles, distances, projection planes, or pipeline stages with their inputs and outputs. For algorithm topics: draw a traced example on real data — a tree with values at each node, a graph with labeled edge weights, an array showing index positions and values at a key algorithm step, or a DP table partially filled in with the recurrence visible. For systems topics: draw a memory layout with stack frames, heap allocations, pointer arrows, and representative addresses. For OOP topics: draw a class hierarchy or object interaction with method calls shown. After the closing code fence, write 3+ paragraphs: one walking through every labeled element in the diagram and what it represents; one explaining what spatial relationship or structural invariant the diagram reveals that pure prose cannot; one describing how the diagram would change as the concept is applied to a different case."],
+      ]) }], "", 16000, MODEL_OPUS, DEEP),
       askJSON([{ role: "user", content: sectionPrompt([
-        ["applications", "Practical applications", "Show 2-3 real, concrete contexts where this concept is used in practice — not toy examples. For each: name the domain, explain exactly how this topic appears, and say what breaks without it."],
-        ["connections", "Connections and extensions", "Connect this topic to 2-3 other concepts the student may already know or will encounter soon. Explain precisely how they relate — how one generalizes another, or how they combine. End with one extension or open question that pushes beyond the basics."],
-      ]) }], "", 2400, MODEL_OPUS),
+        ["proof", "Why it works: the proof sketch",
+         "5+ full paragraphs giving the rigorous correctness argument or first-principles derivation. For algorithms: paragraph 1 states the claim precisely; paragraphs 2-4 prove the key loop invariant (state exactly what is maintained, at what point in the loop, and why it holds initially and is preserved by each iteration), or give the exchange argument (show why any deviation from the greedy choice can only make things worse), or sketch the induction (base case, inductive step, what the inductive hypothesis is); paragraph 5+ shows how the invariant/argument implies the correctness of the final result. For graphics or math topics: derive the formula from first principles — from an optical law, a geometric theorem, or a coordinate transformation rule — so the student sees WHY it must be exactly that formula and not any other. For systems: explain the invariant that guarantees the abstraction works (memory safety, ordering, bounds checking). For OOP: explain why the interface contract holds under all valid use. A student who reads this section should be able to sketch a correct proof or derivation on their own during an exam."],
+        ["clarification", "Where students need more clarification",
+         "5+ full paragraphs that re-teach the 2-3 concepts in this topic where students most consistently need a second, different explanation. For each concept: open with one sentence identifying which aspect needs re-teaching and why the first explanation often does not fully land. Then provide 3+ paragraphs of fresh instruction from a completely different angle than the mechanics section — a new analogy, a different entry point, a more careful unpacking of the step that breaks down, or a side-by-side comparison of the right and wrong mental models. Make each re-explanation self-contained: a student who skipped the mechanics section should still follow it. End the entire section with a single paragraph giving the one insight that, once understood, makes all the clarifications above feel obvious in retrospect."],
+      ]) }], "", 16000, MODEL_OPUS, DEEP),
       fetchYouTubeVideos(expanded).catch(() => []),
     ]);
 
@@ -1608,7 +1630,7 @@ IMPORTANT: prose must be real paragraph text, not placeholder instructions. keyI
         body: JSON.stringify({ sessionToken: user.sessionToken, courseId: COURSE.id, topic: expanded }),
       }).catch(() => {});
     }
-  }, "Building your lesson… (takes 30–45 seconds)"); };
+  }, "Building your lesson… (takes 45–75 seconds)"); };
 
   const doQuiz = () => wrap(async () => {
     const summary = sections.map(s => s.title + ": " + (s.prose || "").slice(0, 300)).join("\n\n");
