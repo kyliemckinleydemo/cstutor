@@ -1655,7 +1655,8 @@ Return JSON with exactly this structure — sections array only, no other keys:
 
 <rules>
 - prose: Write real lesson content — never return the instruction text itself
-- Length: each section must be substantial — at least 5 full paragraphs, each paragraph at least 80 words; do not truncate
+- Length: each section must be substantial — aim for 6-9 paragraphs; do not truncate
+- Paragraph length: keep each paragraph focused on ONE idea — 3 to 5 sentences maximum; start a new paragraph every time you shift to a new thought, step, or angle; short paragraphs are better than long ones
 - No bullet points, no sub-headers inside prose — only flowing connected paragraphs
 - keyItems: always include 3-4 per section, never empty; type must be "formula" or "definition"
 - Use "formula" for: Big-O (O(n log n)), recurrences (T(n) = 2T(n/2) + O(n)), equations (h(k) = k mod m), any symbolic expression, matrix notation
